@@ -222,24 +222,31 @@ export function WorldMap() {
 
             {/* Map */}
             <div className="rounded-lg overflow-hidden border border-border bg-slate-900 relative">
-              {/* CSS for pulse animation - using global style tag */}
+              {/* CSS for glow/breathing animation - stays in place */}
               <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes world-map-pulse {
-                  0% {
-                    transform: scale(1);
+                @keyframes marker-glow {
+                  0%, 100% {
+                    opacity: 0.3;
+                    filter: blur(0px);
+                  }
+                  50% {
                     opacity: 0.8;
-                  }
-                  100% {
-                    transform: scale(2.5);
-                    opacity: 0;
+                    filter: blur(2px);
                   }
                 }
-                .world-map-pulse {
-                  animation: world-map-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                @keyframes marker-breathe {
+                  0%, 100% {
+                    opacity: 1;
+                  }
+                  50% {
+                    opacity: 0.6;
+                  }
                 }
-                .world-map-pulse-delayed {
-                  animation: world-map-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-                  animation-delay: 1s;
+                .marker-glow-ring {
+                  animation: marker-glow 2s ease-in-out infinite;
+                }
+                .marker-breathe {
+                  animation: marker-breathe 1.5s ease-in-out infinite;
                 }
               `}} />
 
@@ -280,44 +287,36 @@ export function WorldMap() {
                     }
                   </Geographies>
 
-                  {/* Node markers with pulse animation */}
+                  {/* Node markers with glow animation */}
                   {groupedMarkers.map((group, idx) => {
-                    const baseRadius = Math.min(4 + group.count * 1.5, 10) / zoom;
+                    const baseRadius = Math.min(5 + group.count * 1.5, 12) / zoom;
+                    const glowRadius = baseRadius * 1.8;
                     
                     return (
                       <Marker 
                         key={group.key} 
                         coordinates={group.coordinates}
                       >
-                        {/* Outer pulse ring 1 */}
+                        {/* Outer glow ring - stays in place, just glows */}
                         <circle
-                          r={baseRadius}
+                          r={glowRadius}
                           fill={MARKER_PULSE}
-                          opacity={0.4}
-                          className="world-map-pulse"
+                          className="marker-glow-ring"
                           style={{ 
-                            transformOrigin: "center",
-                            animationDelay: `${(idx % 5) * 0.4}s` 
+                            animationDelay: `${(idx % 5) * 0.3}s` 
                           }}
                         />
-                        {/* Outer pulse ring 2 (offset) */}
-                        <circle
-                          r={baseRadius}
-                          fill={MARKER_PULSE}
-                          opacity={0.3}
-                          className="world-map-pulse-delayed"
-                          style={{ 
-                            transformOrigin: "center",
-                            animationDelay: `${(idx % 5) * 0.4 + 0.5}s` 
-                          }}
-                        />
-                        {/* Main marker dot */}
+                        {/* Main marker dot with breathing effect */}
                         <circle
                           r={baseRadius}
                           fill={MARKER_FILL}
-                          stroke={MARKER_STROKE}
-                          strokeWidth={2 / zoom}
-                          style={{ cursor: "pointer" }}
+                          stroke="#ffffff"
+                          strokeWidth={1.5 / zoom}
+                          className="marker-breathe"
+                          style={{ 
+                            cursor: "pointer",
+                            animationDelay: `${(idx % 5) * 0.2}s`
+                          }}
                           onMouseEnter={(e) => {
                             const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
                             if (rect) {
@@ -331,16 +330,24 @@ export function WorldMap() {
                           }}
                           onMouseLeave={() => setHoveredMarker(null)}
                         />
+                        {/* Inner bright core */}
+                        <circle
+                          r={baseRadius * 0.4}
+                          fill="#ffffff"
+                          opacity={0.9}
+                          style={{ pointerEvents: "none" }}
+                        />
                         {/* Node count label */}
                         {group.count > 1 && (
                           <text
                             textAnchor="middle"
-                            y={baseRadius / 3}
+                            y={baseRadius + 10 / zoom}
                             style={{
-                              fontSize: `${Math.max(8, 10 / zoom)}px`,
+                              fontSize: `${Math.max(9, 11 / zoom)}px`,
                               fill: "#ffffff",
                               fontWeight: "bold",
                               pointerEvents: "none",
+                              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
                             }}
                           >
                             {group.count}
