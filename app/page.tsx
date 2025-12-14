@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getSnapshot } from "@/lib/pnodes/service";
 import { MetricCard, MetricCardSkeleton } from "@/components/app/MetricCard";
+import { GeoDistribution } from "@/components/app/GeoDistribution";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -256,6 +257,9 @@ async function OverviewContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Geographic Distribution */}
+      <GeoDistribution />
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
