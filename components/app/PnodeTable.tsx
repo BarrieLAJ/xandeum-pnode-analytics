@@ -37,6 +37,10 @@ import {
   Globe,
   Radio,
   ChevronRight,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Loader2,
 } from "lucide-react";
 
 interface PnodeTableProps {
@@ -44,9 +48,12 @@ interface PnodeTableProps {
   modalVersion: string | null;
   versions: string[];
   className?: string;
+  showProbeColumn?: boolean;
+  probing?: boolean;
+  onProbe?: () => void;
 }
 
-type SortField = "pubkey" | "version" | "ip" | "endpointCount";
+type SortField = "pubkey" | "version" | "ip" | "endpointCount" | "latency";
 type SortOrder = "asc" | "desc";
 
 export function PnodeTable({
@@ -54,6 +61,9 @@ export function PnodeTable({
   modalVersion,
   versions,
   className,
+  showProbeColumn = false,
+  probing = false,
+  onProbe,
 }: PnodeTableProps) {
   const [search, setSearch] = useState("");
   const [versionFilter, setVersionFilter] = useState<string>("all");
@@ -105,6 +115,12 @@ export function PnodeTable({
           break;
         case "endpointCount":
           comparison = a.derived.endpointCount - b.derived.endpointCount;
+          break;
+        case "latency":
+          // Sort by latency, putting unreachable/no-probe at the end
+          const aLatency = a.probe?.latencyMs ?? 999999;
+          const bLatency = b.probe?.latencyMs ?? 999999;
+          comparison = aLatency - bLatency;
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;
@@ -183,24 +199,47 @@ export function PnodeTable({
         </Select>
       </div>
 
-      {/* Results count */}
+      {/* Results count and probe button */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
           Showing {filteredRows.length} of {rows.length} pNodes
         </span>
-        {(search || versionFilter !== "all" || rpcFilter !== "all") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSearch("");
-              setVersionFilter("all");
-              setRpcFilter("all");
-            }}
-          >
-            Clear filters
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {(search || versionFilter !== "all" || rpcFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearch("");
+                setVersionFilter("all");
+                setRpcFilter("all");
+              }}
+            >
+              Clear filters
+            </Button>
+          )}
+          {onProbe && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onProbe}
+              disabled={probing}
+              className="gap-2"
+            >
+              {probing ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Probing...
+                </>
+              ) : (
+                <>
+                  <Radio className="h-3.5 w-3.5" />
+                  Test RPC Health
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -223,6 +262,11 @@ export function PnodeTable({
                     Endpoints
                   </SortableHeader>
                 </TableHead>
+                {showProbeColumn && (
+                  <TableHead>
+                    <SortableHeader field="latency">RPC Health</SortableHeader>
+                  </TableHead>
+                )}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -230,7 +274,7 @@ export function PnodeTable({
               {filteredRows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={showProbeColumn ? 6 : 5}
                     className="h-24 text-center text-muted-foreground"
                   >
                     No pNodes found matching your criteria.
@@ -301,6 +345,67 @@ export function PnodeTable({
                         </Tooltip>
                       </TooltipProvider>
                     </TableCell>
+                    {showProbeColumn && (
+                      <TableCell>
+                        {row.probe ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  {row.probe.rpcReachable ? (
+                                    <>
+                                      <CheckCircle className="h-3.5 w-3.5 text-chart-2" />
+                                      <span className="text-sm font-mono">
+                                        {row.probe.latencyMs}ms
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="h-3.5 w-3.5 text-destructive" />
+                                      <span className="text-sm text-muted-foreground">
+                                        Unreachable
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-xs space-y-1">
+                                  <p>
+                                    Status:{" "}
+                                    {row.probe.rpcReachable
+                                      ? "Healthy"
+                                      : "Unreachable"}
+                                  </p>
+                                  {row.probe.latencyMs && (
+                                    <p>Latency: {row.probe.latencyMs}ms</p>
+                                  )}
+                                  {row.probe.rpcVersion && (
+                                    <p>RPC Version: {row.probe.rpcVersion}</p>
+                                  )}
+                                  {row.probe.error && (
+                                    <p className="text-destructive">
+                                      Error: {row.probe.error}
+                                    </p>
+                                  )}
+                                  <p className="text-muted-foreground">
+                                    Probed:{" "}
+                                    {new Date(
+                                      row.probe.probedAt
+                                    ).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span className="text-sm">Not probed</span>
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {row.endpoints.rpc && (
