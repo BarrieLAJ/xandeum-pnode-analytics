@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -11,16 +11,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Globe, MapPin, Loader2, RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
 
 // World map topology URL (free, no API key needed)
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+// Marker colors
+const MARKER_FILL = "#14b8a6"; // teal-500
+const MARKER_PULSE = "#2dd4bf"; // teal-400
+const MARKER_STROKE = "#0d9488"; // teal-600
 
 interface NodeGeo {
   pubkey: string;
@@ -51,12 +50,28 @@ interface GeoApiResponse {
   nodes: NodeGeo[];
 }
 
+interface HoveredMarker {
+  key: string;
+  x: number;
+  y: number;
+  nodes: {
+    pubkey: string;
+    shortPubkey: string;
+    city: string;
+    country: string;
+    countryCode: string;
+    isp: string;
+    coordinates: [number, number];
+  }[];
+}
+
 export function WorldMap() {
   const [data, setData] = useState<GeoApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([0, 20]);
+  const [hoveredMarker, setHoveredMarker] = useState<HoveredMarker | null>(null);
 
   const fetchGeoData = async () => {
     setLoading(true);
@@ -206,13 +221,34 @@ export function WorldMap() {
             </div>
 
             {/* Map */}
-            <div className="rounded-lg overflow-hidden border border-border bg-muted/30">
+            <div className="rounded-lg overflow-hidden border border-border bg-slate-900 relative">
+              {/* CSS for pulse animation - using global style tag */}
+              <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes world-map-pulse {
+                  0% {
+                    transform: scale(1);
+                    opacity: 0.8;
+                  }
+                  100% {
+                    transform: scale(2.5);
+                    opacity: 0;
+                  }
+                }
+                .world-map-pulse {
+                  animation: world-map-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
+                .world-map-pulse-delayed {
+                  animation: world-map-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                  animation-delay: 1s;
+                }
+              `}} />
+
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
                   scale: 120,
                 }}
-                style={{ width: "100%", height: "auto" }}
+                style={{ width: "100%", height: "400px" }}
               >
                 <ZoomableGroup
                   zoom={zoom}
@@ -228,13 +264,13 @@ export function WorldMap() {
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}
-                          fill="hsl(var(--muted))"
-                          stroke="hsl(var(--border))"
+                          fill="#1e293b"
+                          stroke="#334155"
                           strokeWidth={0.5}
                           style={{
                             default: { outline: "none" },
                             hover: { 
-                              fill: "hsl(var(--muted-foreground) / 0.3)", 
+                              fill: "#334155", 
                               outline: "none" 
                             },
                             pressed: { outline: "none" },
@@ -244,78 +280,143 @@ export function WorldMap() {
                     }
                   </Geographies>
 
-                  {/* Node markers */}
-                  {groupedMarkers.map((group) => (
-                    <TooltipProvider key={group.key}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Marker coordinates={group.coordinates}>
-                            <circle
-                              r={Math.min(4 + group.count * 2, 12) / zoom}
-                              fill="hsl(var(--primary))"
-                              stroke="hsl(var(--background))"
-                              strokeWidth={1.5 / zoom}
-                              className="cursor-pointer transition-all hover:opacity-80"
-                            />
-                            {group.count > 1 && zoom >= 2 && (
-                              <text
-                                textAnchor="middle"
-                                y={1}
-                                style={{
-                                  fontSize: `${8 / zoom}px`,
-                                  fill: "hsl(var(--primary-foreground))",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {group.count}
-                              </text>
-                            )}
-                          </Marker>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <div className="space-y-1">
-                            <p className="font-medium">
-                              {group.nodes[0].city}, {group.nodes[0].country}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {group.count} pNode{group.count > 1 ? "s" : ""}
-                            </p>
-                            {group.count <= 3 &&
-                              group.nodes.map((n) => (
-                                <p
-                                  key={n.pubkey}
-                                  className="text-xs font-mono"
-                                >
-                                  {n.shortPubkey}
-                                </p>
-                              ))}
-                            {group.count > 3 && (
-                              <p className="text-xs text-muted-foreground">
-                                + {group.count - 3} more
-                              </p>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
+                  {/* Node markers with pulse animation */}
+                  {groupedMarkers.map((group, idx) => {
+                    const baseRadius = Math.min(4 + group.count * 1.5, 10) / zoom;
+                    
+                    return (
+                      <Marker 
+                        key={group.key} 
+                        coordinates={group.coordinates}
+                      >
+                        {/* Outer pulse ring 1 */}
+                        <circle
+                          r={baseRadius}
+                          fill={MARKER_PULSE}
+                          opacity={0.4}
+                          className="world-map-pulse"
+                          style={{ 
+                            transformOrigin: "center",
+                            animationDelay: `${(idx % 5) * 0.4}s` 
+                          }}
+                        />
+                        {/* Outer pulse ring 2 (offset) */}
+                        <circle
+                          r={baseRadius}
+                          fill={MARKER_PULSE}
+                          opacity={0.3}
+                          className="world-map-pulse-delayed"
+                          style={{ 
+                            transformOrigin: "center",
+                            animationDelay: `${(idx % 5) * 0.4 + 0.5}s` 
+                          }}
+                        />
+                        {/* Main marker dot */}
+                        <circle
+                          r={baseRadius}
+                          fill={MARKER_FILL}
+                          stroke={MARKER_STROKE}
+                          strokeWidth={2 / zoom}
+                          style={{ cursor: "pointer" }}
+                          onMouseEnter={(e) => {
+                            const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                            if (rect) {
+                              setHoveredMarker({
+                                key: group.key,
+                                x: e.clientX - rect.left,
+                                y: e.clientY - rect.top,
+                                nodes: group.nodes,
+                              });
+                            }
+                          }}
+                          onMouseLeave={() => setHoveredMarker(null)}
+                        />
+                        {/* Node count label */}
+                        {group.count > 1 && (
+                          <text
+                            textAnchor="middle"
+                            y={baseRadius / 3}
+                            style={{
+                              fontSize: `${Math.max(8, 10 / zoom)}px`,
+                              fill: "#ffffff",
+                              fontWeight: "bold",
+                              pointerEvents: "none",
+                            }}
+                          >
+                            {group.count}
+                          </text>
+                        )}
+                      </Marker>
+                    );
+                  })}
                 </ZoomableGroup>
               </ComposableMap>
+
+              {/* Custom tooltip overlay */}
+              {hoveredMarker && (
+                <div
+                  className="absolute z-50 pointer-events-none"
+                  style={{
+                    left: Math.min(hoveredMarker.x + 10, 300),
+                    top: hoveredMarker.y - 10,
+                  }}
+                >
+                  <div className="bg-slate-800 border border-teal-500/50 rounded-lg p-3 shadow-xl text-white min-w-[180px]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="h-2 w-2 rounded-full bg-teal-400 animate-pulse" />
+                      <span className="text-teal-400 text-xs font-semibold uppercase tracking-wider">
+                        Live
+                      </span>
+                    </div>
+                    <p className="font-semibold text-sm">
+                      {hoveredMarker.nodes[0].city || "Unknown City"}, {hoveredMarker.nodes[0].country}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {hoveredMarker.nodes.length} active pNode{hoveredMarker.nodes.length > 1 ? "s" : ""}
+                    </p>
+                    <div className="mt-2 pt-2 border-t border-slate-700 space-y-1">
+                      {hoveredMarker.nodes.slice(0, 4).map((n) => (
+                        <div key={n.pubkey} className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                          <span className="text-xs font-mono text-slate-300">
+                            {n.shortPubkey}
+                          </span>
+                        </div>
+                      ))}
+                      {hoveredMarker.nodes.length > 4 && (
+                        <p className="text-xs text-slate-500">
+                          +{hoveredMarker.nodes.length - 4} more nodes
+                        </p>
+                      )}
+                    </div>
+                    {hoveredMarker.nodes[0].isp && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        ISP: {hoveredMarker.nodes[0].isp}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Legend */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-primary" />
-                  <span>pNode location</span>
+                  <div className="relative h-3 w-3">
+                    <div className="absolute inset-0 rounded-full bg-teal-400 animate-ping opacity-50" />
+                    <div className="absolute inset-0 rounded-full bg-teal-500" />
+                  </div>
+                  <span>Active pNode</span>
                 </div>
-                <span>
+                <Badge variant="outline" className="gap-1">
+                  <Globe className="h-3 w-3" />
                   {Object.keys(data.distribution.byCountry).length} countries
-                </span>
+                </Badge>
               </div>
-              <span>
-                Updated: {new Date(data.generatedAt).toLocaleTimeString()}
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live • {new Date(data.generatedAt).toLocaleTimeString()}
               </span>
             </div>
           </div>
