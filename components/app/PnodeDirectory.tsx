@@ -4,7 +4,9 @@ import { useState, useCallback } from "react";
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { PnodeTable } from "./PnodeTable";
 import { MetricCard } from "./MetricCard";
+import { PerformanceCharts } from "./PerformanceCharts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import {
   Server,
@@ -15,6 +17,7 @@ import {
   Activity,
   Zap,
   Star,
+  BarChart3,
 } from "lucide-react";
 
 interface PnodeDirectoryProps {
@@ -35,6 +38,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
   const [probing, setProbing] = useState(false);
   const [probeStats, setProbeStats] = useState<ProbeStats | null>(null);
   const [probeError, setProbeError] = useState<string | null>(null);
+  const [showCharts, setShowCharts] = useState(false);
 
   // Watchlist hook
   const { watchlist, toggle: toggleWatchlist, count: watchlistCount } = useWatchlist();
@@ -174,6 +178,15 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant={showCharts ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowCharts(!showCharts)}
+            className="gap-2"
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            {showCharts ? "Hide Charts" : "Show Charts"}
+          </Button>
           <Badge variant="outline" className="gap-1.5">
             <span className="h-2 w-2 rounded-full bg-chart-2 animate-pulse" />
             Live
@@ -195,6 +208,14 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
           )}
         </div>
       </div>
+
+      {/* Performance Charts */}
+      {showCharts && (
+        <PerformanceCharts
+          rows={snapshot.rows}
+          modalVersion={snapshot.stats.modalVersion}
+        />
+      )}
 
       {/* Table */}
       <PnodeTable

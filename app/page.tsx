@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSnapshot } from "@/lib/pnodes/service";
 import { MetricCard, MetricCardSkeleton } from "@/components/app/MetricCard";
 import { GeoDistribution } from "@/components/app/GeoDistribution";
+import { WorldMap } from "@/components/app/WorldMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -259,7 +260,10 @@ async function OverviewContent() {
       </div>
 
       {/* Geographic Distribution */}
-      <GeoDistribution />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WorldMap />
+        <GeoDistribution />
+      </div>
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
