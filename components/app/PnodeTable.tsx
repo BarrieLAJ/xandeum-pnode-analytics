@@ -11,6 +11,7 @@ import {
 } from "@/lib/export/csv";
 import { CopyButton } from "./CopyButton";
 import { VersionBadge } from "./StatusBadge";
+import { WatchlistButton } from "./WatchlistButton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +58,9 @@ interface PnodeTableProps {
   showProbeColumn?: boolean;
   probing?: boolean;
   onProbe?: () => void;
+  watchlist?: string[];
+  onToggleWatchlist?: (pubkey: string) => void;
+  showWatchlistFilter?: boolean;
 }
 
 type SortField = "pubkey" | "version" | "ip" | "endpointCount" | "latency";
@@ -70,10 +74,14 @@ export function PnodeTable({
   showProbeColumn = false,
   probing = false,
   onProbe,
+  watchlist = [],
+  onToggleWatchlist,
+  showWatchlistFilter = false,
 }: PnodeTableProps) {
   const [search, setSearch] = useState("");
   const [versionFilter, setVersionFilter] = useState<string>("all");
   const [rpcFilter, setRpcFilter] = useState<string>("all");
+  const [watchlistFilter, setWatchlistFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("pubkey");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
@@ -102,6 +110,13 @@ export function PnodeTable({
       result = result.filter((row) => row.derived.hasRpc);
     } else if (rpcFilter === "noRpc") {
       result = result.filter((row) => !row.derived.hasRpc);
+    }
+
+    // Watchlist filter
+    if (watchlistFilter === "watched") {
+      result = result.filter((row) => watchlist.includes(row.pubkey));
+    } else if (watchlistFilter === "notWatched") {
+      result = result.filter((row) => !watchlist.includes(row.pubkey));
     }
 
     // Sort
@@ -133,7 +148,7 @@ export function PnodeTable({
     });
 
     return result;
-  }, [rows, search, versionFilter, rpcFilter, sortField, sortOrder]);
+  }, [rows, search, versionFilter, rpcFilter, watchlistFilter, watchlist, sortField, sortOrder]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -209,6 +224,18 @@ export function PnodeTable({
             <SelectItem value="noRpc">No RPC</SelectItem>
           </SelectContent>
         </Select>
+        {showWatchlistFilter && watchlist.length > 0 && (
+          <Select value={watchlistFilter} onValueChange={setWatchlistFilter}>
+            <SelectTrigger className="w-full sm:w-[140px]">
+              <SelectValue placeholder="Watchlist" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All nodes</SelectItem>
+              <SelectItem value="watched">Watched ({watchlist.length})</SelectItem>
+              <SelectItem value="notWatched">Not watched</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Results count and probe button */}
@@ -217,7 +244,7 @@ export function PnodeTable({
           Showing {filteredRows.length} of {rows.length} pNodes
         </span>
         <div className="flex items-center gap-2">
-          {(search || versionFilter !== "all" || rpcFilter !== "all") && (
+          {(search || versionFilter !== "all" || rpcFilter !== "all" || watchlistFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
@@ -225,6 +252,7 @@ export function PnodeTable({
                 setSearch("");
                 setVersionFilter("all");
                 setRpcFilter("all");
+                setWatchlistFilter("all");
               }}
             >
               Clear filters
@@ -306,6 +334,13 @@ export function PnodeTable({
                   <TableRow key={row.pubkey} className="group">
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        {onToggleWatchlist && (
+                          <WatchlistButton
+                            pubkey={row.pubkey}
+                            isWatched={watchlist.includes(row.pubkey)}
+                            onToggle={onToggleWatchlist}
+                          />
+                        )}
                         <div className="p-1.5 rounded bg-primary/10 text-primary">
                           <Server className="h-3.5 w-3.5" />
                         </div>

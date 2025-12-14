@@ -5,6 +5,7 @@ import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { PnodeTable } from "./PnodeTable";
 import { MetricCard } from "./MetricCard";
 import { Badge } from "@/components/ui/badge";
+import { useWatchlist } from "@/hooks/useWatchlist";
 import {
   Server,
   Radio,
@@ -13,6 +14,7 @@ import {
   AlertTriangle,
   Activity,
   Zap,
+  Star,
 } from "lucide-react";
 
 interface PnodeDirectoryProps {
@@ -33,6 +35,9 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
   const [probing, setProbing] = useState(false);
   const [probeStats, setProbeStats] = useState<ProbeStats | null>(null);
   const [probeError, setProbeError] = useState<string | null>(null);
+
+  // Watchlist hook
+  const { watchlist, toggle: toggleWatchlist, count: watchlistCount } = useWatchlist();
 
   const versions = Object.keys(snapshot.stats.versionDistribution).sort();
 
@@ -150,14 +155,10 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
               delay={100}
             />
             <MetricCard
-              title="Last Updated"
-              value={new Date(snapshot.generatedAt).toLocaleTimeString()}
-              subtitle={
-                snapshot.fetchDurationMs
-                  ? `Fetched in ${snapshot.fetchDurationMs.toFixed(0)}ms`
-                  : "From cache"
-              }
-              icon={Clock}
+              title="Watchlist"
+              value={watchlistCount}
+              subtitle="Saved pNodes"
+              icon={Star}
               delay={150}
             />
           </>
@@ -186,6 +187,12 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
               Probed
             </Badge>
           )}
+          {watchlistCount > 0 && (
+            <Badge variant="outline" className="gap-1.5 text-chart-3 border-chart-3/30">
+              <Star className="h-3 w-3 fill-chart-3" />
+              {watchlistCount} watched
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -197,8 +204,10 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
         showProbeColumn={probeStats !== null}
         probing={probing}
         onProbe={handleProbe}
+        watchlist={watchlist}
+        onToggleWatchlist={toggleWatchlist}
+        showWatchlistFilter={true}
       />
     </div>
   );
 }
-
