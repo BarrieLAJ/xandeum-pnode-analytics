@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PnodeRow } from "@/lib/pnodes/model";
+import {
+  pnodesToCSV,
+  downloadCSV,
+  generateExportFilename,
+} from "@/lib/export/csv";
 import { CopyButton } from "./CopyButton";
 import { VersionBadge } from "./StatusBadge";
 import { Input } from "@/components/ui/input";
@@ -41,6 +46,7 @@ import {
   XCircle,
   Clock,
   Loader2,
+  Download,
 } from "lucide-react";
 
 interface PnodeTableProps {
@@ -137,6 +143,12 @@ export function PnodeTable({
       setSortOrder("asc");
     }
   };
+
+  const handleExport = useCallback(() => {
+    const csv = pnodesToCSV(filteredRows);
+    const filename = generateExportFilename("xandeum-pnodes");
+    downloadCSV(csv, filename);
+  }, [filteredRows]);
 
   const SortableHeader = ({
     field,
@@ -239,6 +251,15 @@ export function PnodeTable({
               )}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            className="gap-2"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
         </div>
       </div>
 
