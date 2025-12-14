@@ -6,11 +6,18 @@ A real-time analytics dashboard for Xandeum pNodes — the storage provider node
 
 ## Features
 
+### Core Features
 - **Live Network Overview**: Real-time KPIs showing total pNodes, RPC coverage, and version distribution
 - **pNode Directory**: Searchable, sortable, and filterable table of all pNodes in gossip
-- **Node Details**: Deep dive into individual pNode configurations, endpoints, and raw data
+- **Node Details**: Deep dive into individual pNode configurations, endpoints, and raw JSON data
 - **Side-by-Side Compare**: Compare up to 4 pNodes simultaneously
 - **Dark Mode UI**: Modern, accessible interface with a distinctive teal/cyan theme
+
+### Advanced Features
+- **RPC Health Probing**: Test each node's RPC endpoint for reachability and latency
+- **CSV Export**: Export filtered pNode data to CSV for offline analysis
+- **Watchlist**: Save favorite pNodes to localStorage for quick access
+- **Geographic Distribution**: View node distribution by country using IP geolocation
 
 ## Tech Stack
 
@@ -108,7 +115,9 @@ pnpm start
 │   ├── api/
 │   │   └── pnodes/
 │   │       ├── snapshot/route.ts    # GET all pNodes
-│   │       └── [id]/route.ts        # GET single pNode
+│   │       ├── [id]/route.ts        # GET single pNode
+│   │       ├── probe/route.ts       # RPC health probing
+│   │       └── geo/route.ts         # IP geolocation
 │   ├── pnodes/
 │   │   ├── page.tsx                 # pNode directory
 │   │   └── [id]/page.tsx            # pNode detail
@@ -121,10 +130,15 @@ pnpm start
 │   ├── app/                         # App-specific components
 │   │   ├── AppShell.tsx             # Main layout shell
 │   │   ├── MetricCard.tsx           # KPI cards
-│   │   ├── PnodeTable.tsx           # Data table
+│   │   ├── PnodeTable.tsx           # Data table with filters
+│   │   ├── PnodeDirectory.tsx       # Directory page client component
+│   │   ├── GeoDistribution.tsx      # Geographic distribution
+│   │   ├── WatchlistButton.tsx      # Watchlist toggle
 │   │   ├── StatusBadge.tsx          # Status indicators
 │   │   └── CopyButton.tsx           # Copy to clipboard
 │   └── ui/                          # shadcn/ui primitives
+├── hooks/
+│   └── useWatchlist.ts              # Watchlist React hook
 ├── lib/
 │   ├── config/
 │   │   └── env.ts                   # Environment validation
@@ -134,9 +148,16 @@ pnpm start
 │   ├── pnodes/
 │   │   ├── schemas.ts               # Zod schemas
 │   │   ├── model.ts                 # Domain types
-│   │   └── service.ts               # Business logic
+│   │   ├── service.ts               # Business logic
+│   │   └── probe.ts                 # RPC probing
 │   ├── cache/
 │   │   └── ttl.ts                   # In-memory cache
+│   ├── export/
+│   │   └── csv.ts                   # CSV export utilities
+│   ├── geo/
+│   │   └── lookup.ts                # IP geolocation
+│   ├── watchlist/
+│   │   └── storage.ts               # localStorage watchlist
 │   └── utils.ts                     # Utilities
 ```
 
@@ -179,31 +200,76 @@ Returns the current snapshot of all pNodes from gossip.
 
 Returns detailed information about a specific pNode.
 
+### GET /api/pnodes/probe
+
+Probes all pNode RPC endpoints for health and latency.
+
+**Query Parameters:**
+- `force` - Set to `true` to probe even if disabled in config
+
 **Response:**
 ```json
 {
   "generatedAt": "2024-01-15T12:00:00.000Z",
-  "node": {
-    "pubkey": "4jukF893ntbfTWHpEn1jK7ZjPEKXpMdVgQd3HeskMzHo",
-    "version": "2.2.0-7c3f39e8",
-    "shredVersion": 48698,
-    "featureSet": 3294202862,
-    "endpoints": {...},
-    "derived": {...},
-    "raw": {...}
+  "probeDurationMs": 5432,
+  "stats": {
+    "totalProbed": 22,
+    "reachable": 18,
+    "unreachable": 4,
+    "avgLatencyMs": 145,
+    "minLatencyMs": 45,
+    "maxLatencyMs": 890
   },
-  "context": {
-    "totalNodes": 22,
-    "modalVersion": "2.2.0-7c3f39e8",
-    "isOnModalVersion": true
-  }
+  "rows": [...]
 }
 ```
+
+### GET /api/pnodes/geo
+
+Looks up geographic information for pNode IPs.
+
+**Query Parameters:**
+- `limit` - Max number of IPs to lookup (default: 50, max: 100)
+
+## Features in Detail
+
+### RPC Health Probing
+
+Click "Test RPC Health" in the directory to probe each node's RPC endpoint:
+- Tests `getHealth` endpoint for each node
+- Measures round-trip latency in milliseconds
+- Shows reachable/unreachable status
+- Displays results in a dedicated column
+
+### CSV Export
+
+Export the current filtered table to CSV:
+- Includes all node data (pubkey, version, endpoints)
+- Includes probe results if available
+- Respects current filters
+- Timestamped filename
+
+### Watchlist
+
+Save favorite pNodes for quick access:
+- Click the star icon on any node row
+- Filter by watched/unwatched
+- Persisted in localStorage
+- Shown in KPI cards
+
+### Geographic Distribution
+
+View node distribution by country:
+- Click "Load Geo Data" on overview page
+- Uses free IP-API service (rate-limited)
+- Shows country breakdown with visual bars
+- Cached for 24 hours
 
 ## Caching Strategy
 
 - **Snapshot Cache**: 30-second TTL for the full pNode list
 - **Node Detail Cache**: 60-second TTL for individual node data
+- **Geo Cache**: 24-hour TTL for IP geolocation results
 - **Stale Fallback**: If pRPC is unreachable, cached data is returned with a `stale: true` flag
 
 ## Deployment
