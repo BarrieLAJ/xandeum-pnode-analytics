@@ -1,40 +1,38 @@
 "use client";
 
+import { getLocalStorageKv, createTypedStore } from "@/lib/storage";
+
 const WATCHLIST_KEY = "xandeum-pnode-watchlist";
 const MAX_WATCHLIST_SIZE = 50;
 
 /**
- * Get the current watchlist from localStorage
+ * Get the typed watchlist store
  */
-export function getWatchlist(): string[] {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const stored = localStorage.getItem(WATCHLIST_KEY);
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.filter((item): item is string => typeof item === "string");
-  } catch {
-    return [];
-  }
+function getWatchlistStore() {
+  const store = getLocalStorageKv();
+  return createTypedStore<string[]>(store, WATCHLIST_KEY);
 }
 
 /**
- * Save the watchlist to localStorage
+ * Get the current watchlist from storage
+ */
+export function getWatchlist(): string[] {
+  const store = getWatchlistStore();
+  const data = store.get();
+  
+  if (!data || !Array.isArray(data)) return [];
+  
+  return data.filter((item): item is string => typeof item === "string");
+}
+
+/**
+ * Save the watchlist to storage
  */
 export function saveWatchlist(pubkeys: string[]): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    // Limit the size
-    const limited = pubkeys.slice(0, MAX_WATCHLIST_SIZE);
-    localStorage.setItem(WATCHLIST_KEY, JSON.stringify(limited));
-  } catch {
-    // Ignore storage errors (quota exceeded, etc.)
-  }
+  const store = getWatchlistStore();
+  // Limit the size
+  const limited = pubkeys.slice(0, MAX_WATCHLIST_SIZE);
+  store.set(limited);
 }
 
 /**
@@ -96,12 +94,7 @@ export function toggleWatchlist(pubkey: string): {
  * Clear the entire watchlist
  */
 export function clearWatchlist(): void {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(WATCHLIST_KEY);
-  } catch {
-    // Ignore errors
-  }
+  const store = getWatchlistStore();
+  store.remove();
 }
 

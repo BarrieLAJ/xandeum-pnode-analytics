@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSnapshot, filterPnodes, sortPnodes } from "@/lib/pnodes/service";
+import { serverError } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -67,14 +68,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error("Error fetching pNodes snapshot:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to fetch pNodes snapshot",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return serverError("Failed to fetch pNodes snapshot", error);
   }
 }
 

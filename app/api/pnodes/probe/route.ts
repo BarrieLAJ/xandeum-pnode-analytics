@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSnapshot } from "@/lib/pnodes/service";
 import {
-  probeNodes,
-  enrichWithProbes,
-  calculateProbeStats,
-} from "@/lib/pnodes/probe";
+	probeNodes,
+	enrichWithProbes,
+	calculateProbeStats,
+} from "../_services/probe";
 import { isRpcProbingEnabled } from "@/lib/config/env";
+import { forbidden, notFound, serverError } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,13 +30,9 @@ export async function GET(request: Request) {
 
     // Check if probing is enabled
     if (!isRpcProbingEnabled() && !force) {
-      return NextResponse.json(
-        {
-          error: "RPC probing is disabled",
-          message:
-            "Set ENABLE_RPC_PROBES=true in environment or use ?force=true",
-        },
-        { status: 403 }
+      return forbidden(
+        "RPC probing is disabled",
+        "Set ENABLE_RPC_PROBES=true in environment or use ?force=true"
       );
     }
 
@@ -45,12 +42,7 @@ export async function GET(request: Request) {
     const snapshot = await getSnapshot();
 
     if (snapshot.rows.length === 0) {
-      return NextResponse.json(
-        {
-          error: "No pNodes available to probe",
-        },
-        { status: 404 }
-      );
+      return notFound("No pNodes available to probe");
     }
 
     // Probe all nodes
@@ -83,14 +75,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error("Error probing pNodes:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to probe pNodes",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return serverError("Failed to probe pNodes", error);
   }
 }
 

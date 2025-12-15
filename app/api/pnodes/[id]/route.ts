@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPnodeById, getSnapshot } from "@/lib/pnodes/service";
+import { badRequest, notFound, serverError } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,20 +19,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     const { id: pubkey } = await params;
 
     if (!pubkey) {
-      return NextResponse.json(
-        { error: "Missing pubkey parameter" },
-        { status: 400 }
-      );
+      return badRequest("Missing pubkey parameter");
     }
 
     // Get the specific node
     const node = await getPnodeById(pubkey);
 
     if (!node) {
-      return NextResponse.json(
-        { error: "pNode not found", pubkey },
-        { status: 404 }
-      );
+      return notFound("pNode not found", undefined, { pubkey });
     }
 
     // Get snapshot for context (stats, modal version, etc.)
@@ -56,14 +51,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
   } catch (error) {
     console.error("Error fetching pNode details:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to fetch pNode details",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return serverError("Failed to fetch pNode details", error);
   }
 }
 

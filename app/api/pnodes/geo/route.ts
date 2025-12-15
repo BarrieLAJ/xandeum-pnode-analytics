@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSnapshot } from "@/lib/pnodes/service";
-import { batchLookupIps, calculateGeoDistribution } from "@/lib/geo/lookup";
+import {
+	batchLookupIps,
+	calculateGeoDistribution,
+} from "../_services/geo";
+import { notFound, serverError } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,10 +32,7 @@ export async function GET(request: Request) {
     const snapshot = await getSnapshot();
 
     if (snapshot.rows.length === 0) {
-      return NextResponse.json(
-        { error: "No pNodes available" },
-        { status: 404 }
-      );
+      return notFound("No pNodes available");
     }
 
     // Extract unique IPs
@@ -75,14 +76,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error("Error looking up geo data:", error);
-
-    return NextResponse.json(
-      {
-        error: "Failed to lookup geo data",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return serverError("Failed to lookup geo data", error);
   }
 }
 
