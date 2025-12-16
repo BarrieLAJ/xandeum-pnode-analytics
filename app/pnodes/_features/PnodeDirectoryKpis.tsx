@@ -1,19 +1,12 @@
 "use client";
 
 import { MetricCard } from "@/components/shared/MetricCard";
-import { Server, Radio, GitBranch, Activity, Zap, Star } from "lucide-react";
-import type { ProbeStats } from "./hooks/usePnodeProbe";
-
-interface SnapshotStats {
-	totalNodes: number;
-	nodesWithRpc: number;
-	uniqueVersions: number;
-	modalVersion: string | null;
-}
+import { Server, Globe, Database, Timer } from "lucide-react";
+import type { SnapshotStats } from "@/lib/pnodes/model";
+import { formatBytes, formatDurationSeconds } from "@/lib/utils";
 
 interface PnodeDirectoryKpisProps {
 	stats: SnapshotStats;
-	probeStats: ProbeStats | null;
 	watchlistCount: number;
 }
 
@@ -22,7 +15,6 @@ interface PnodeDirectoryKpisProps {
  */
 export function PnodeDirectoryKpis({
 	stats,
-	probeStats,
 	watchlistCount,
 }: PnodeDirectoryKpisProps) {
 	return (
@@ -30,58 +22,33 @@ export function PnodeDirectoryKpis({
 			<MetricCard
 				title="Total pNodes"
 				value={stats.totalNodes}
-				subtitle="In gossip network"
+				subtitle="Discovered via pRPC gossip"
 				icon={Server}
 				delay={0}
 			/>
 			<MetricCard
-				title="With RPC"
-				value={stats.nodesWithRpc}
+				title="Public pNodes"
+				value={stats.publicPods ?? stats.nodesWithRpc}
 				subtitle={`${Math.round(
-					(stats.nodesWithRpc / Math.max(stats.totalNodes, 1)) * 100
-				)}% of nodes`}
-				icon={Radio}
+					((stats.publicPods ?? stats.nodesWithRpc) / Math.max(stats.totalNodes, 1)) * 100
+				)}% publicly reachable`}
+				icon={Globe}
 				delay={50}
 			/>
-			{probeStats ? (
-				<>
-					<MetricCard
-						title="RPC Reachable"
-						value={probeStats.reachable}
-						subtitle={`${probeStats.unreachable} unreachable`}
-						icon={Activity}
-						delay={100}
-					/>
-					<MetricCard
-						title="Avg Latency"
-						value={probeStats.avgLatencyMs ? `${probeStats.avgLatencyMs}ms` : "—"}
-						subtitle={
-							probeStats.minLatencyMs && probeStats.maxLatencyMs
-								? `${probeStats.minLatencyMs}ms - ${probeStats.maxLatencyMs}ms`
-								: "No data"
-						}
-						icon={Zap}
-						delay={150}
-					/>
-				</>
-			) : (
-				<>
-					<MetricCard
-						title="Unique Versions"
-						value={stats.uniqueVersions}
-						subtitle={`Modal: ${stats.modalVersion ?? "—"}`}
-						icon={GitBranch}
-						delay={100}
-					/>
-					<MetricCard
-						title="Watchlist"
-						value={watchlistCount}
-						subtitle="Saved pNodes"
-						icon={Star}
-						delay={150}
-					/>
-				</>
-			)}
+			<MetricCard
+				title="Storage Committed"
+				value={formatBytes(stats.totalStorageCommittedBytes)}
+				subtitle="Across all pNodes"
+				icon={Database}
+				delay={100}
+			/>
+			<MetricCard
+				title="Avg Uptime"
+				value={formatDurationSeconds(stats.avgUptimeSeconds ?? undefined)}
+				subtitle={`${watchlistCount} watched`}
+				icon={Timer}
+				delay={150}
+			/>
 		</div>
 	);
 }

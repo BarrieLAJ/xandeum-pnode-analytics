@@ -63,12 +63,12 @@ export function PnodeTableFilters({
       </Select>
       <Select value={rpcFilter} onValueChange={onRpcFilterChange}>
         <SelectTrigger className="w-full sm:w-[140px]">
-          <SelectValue placeholder="RPC Status" />
+          <SelectValue placeholder="Public" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All nodes</SelectItem>
-          <SelectItem value="hasRpc">Has RPC</SelectItem>
-          <SelectItem value="noRpc">No RPC</SelectItem>
+          <SelectItem value="hasRpc">Public</SelectItem>
+          <SelectItem value="noRpc">Private</SelectItem>
         </SelectContent>
       </Select>
       {showWatchlistFilter && watchlistCount > 0 && (

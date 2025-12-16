@@ -2,13 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Star, BarChart3 } from "lucide-react";
+import { Star, BarChart3 } from "lucide-react";
 
 interface PnodeDirectoryHeaderProps {
   /** Source method from snapshot */
   sourceMethod: string;
-  /** Whether probe results are available */
-  hasProbeData: boolean;
   /** Number of watched nodes */
   watchlistCount: number;
   /** Whether charts are visible */
@@ -22,7 +20,6 @@ interface PnodeDirectoryHeaderProps {
  */
 export function PnodeDirectoryHeader({
   sourceMethod,
-  hasProbeData,
   watchlistCount,
   showCharts,
   onToggleCharts,
@@ -52,12 +49,6 @@ export function PnodeDirectoryHeader({
         <Badge variant="secondary" className="font-mono text-xs">
           {sourceMethod}
         </Badge>
-        {hasProbeData && (
-          <Badge variant="outline" className="gap-1.5 text-chart-2 border-chart-2/30">
-            <Activity className="h-3 w-3" />
-            Probed
-          </Badge>
-        )}
         {watchlistCount > 0 && (
           <Badge variant="outline" className="gap-1.5 text-chart-3 border-chart-3/30">
             <Star className="h-3 w-3 fill-chart-3" />

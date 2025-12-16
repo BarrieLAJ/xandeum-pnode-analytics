@@ -105,7 +105,7 @@ export function PnodeTable({
 							{filteredRows.length === 0 ? (
 								<TableRow>
 									<TableCell
-										colSpan={showProbeColumn ? 6 : 5}
+										colSpan={8}
 										className="h-24 text-center text-muted-foreground"
 									>
 										No pNodes found matching your criteria.

@@ -111,6 +111,7 @@ class TTLCache<T> {
 // Export singleton instances for different cache needs
 export const snapshotCache = new TTLCache<unknown>(30_000); // 30s default
 export const nodeDetailCache = new TTLCache<unknown>(60_000); // 60s default
+export const pnodeStatsCache = new TTLCache<unknown>(15_000); // 15s default (per-node live stats)
 
 // Export class for custom instances
 export { TTLCache };

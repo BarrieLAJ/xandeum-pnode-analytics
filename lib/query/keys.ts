@@ -10,6 +10,8 @@ export const queryKeys = {
       [...queryKeys.pnodes.all, "snapshot", params] as const,
     detail: (pubkey: string) =>
       [...queryKeys.pnodes.all, "detail", pubkey] as const,
+    stats: (pubkey: string) =>
+      [...queryKeys.pnodes.all, "stats", pubkey] as const,
     probe: () => [...queryKeys.pnodes.all, "probe"] as const,
   },
 

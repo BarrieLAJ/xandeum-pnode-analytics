@@ -22,6 +22,11 @@ export interface JsonRpcSuccessResponse<T = unknown> {
   jsonrpc: "2.0";
   id: number | string;
   result: T;
+  /**
+   * Non-standard: some servers include `error: null` even for successful responses.
+   * JSON-RPC 2.0 omits `error` entirely on success.
+   */
+  error?: null;
 }
 
 /**
@@ -40,6 +45,8 @@ export interface JsonRpcErrorResponse {
   jsonrpc: "2.0";
   id: number | string | null;
   error: JsonRpcErrorObject;
+  /** JSON-RPC 2.0 error responses must not include `result`. */
+  result?: never;
 }
 
 /**
@@ -55,7 +62,8 @@ export type JsonRpcResponse<T = unknown> =
 export function isJsonRpcError(
   response: JsonRpcResponse
 ): response is JsonRpcErrorResponse {
-  return "error" in response;
+  // Some servers send `error: null` on success; treat only non-null errors as errors.
+  return (response as { error?: unknown }).error != null;
 }
 
 /**

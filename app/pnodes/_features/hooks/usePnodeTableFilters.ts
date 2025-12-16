@@ -3,7 +3,11 @@
 import { useState, useMemo } from "react";
 import { PnodeRow } from "@/lib/pnodes/model";
 
-type SortField = "pubkey" | "version" | "ip" | "endpointCount" | "latency";
+type SortField =
+  | "pubkey"
+  | "version"
+  | "public"
+  | "storageUsed";
 type SortOrder = "asc" | "desc";
 
 interface UsePnodeTableFiltersProps {
@@ -14,7 +18,7 @@ interface UsePnodeTableFiltersProps {
 export function usePnodeTableFilters({ rows, watchlist }: UsePnodeTableFiltersProps) {
   const [search, setSearch] = useState("");
   const [versionFilter, setVersionFilter] = useState<string>("all");
-  const [rpcFilter, setRpcFilter] = useState<string>("all");
+  const [rpcFilter, setRpcFilter] = useState<string>("all"); // kept name for compatibility: maps to Public/Private
   const [watchlistFilter, setWatchlistFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("pubkey");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -39,10 +43,11 @@ export function usePnodeTableFilters({ rows, watchlist }: UsePnodeTableFiltersPr
     }
 
     // RPC filter
+    // In pNode pRPC world, `hasRpc` effectively means "publicly reachable".
     if (rpcFilter === "hasRpc") {
-      result = result.filter((row) => row.derived.hasRpc);
+      result = result.filter((row) => row.pod?.isPublic ?? row.derived.hasRpc);
     } else if (rpcFilter === "noRpc") {
-      result = result.filter((row) => !row.derived.hasRpc);
+      result = result.filter((row) => !(row.pod?.isPublic ?? row.derived.hasRpc));
     }
 
     // Watchlist filter
@@ -62,18 +67,12 @@ export function usePnodeTableFilters({ rows, watchlist }: UsePnodeTableFiltersPr
         case "version":
           comparison = (a.version ?? "").localeCompare(b.version ?? "");
           break;
-        case "ip":
-          comparison = (a.derived.ipAddress ?? "").localeCompare(
-            b.derived.ipAddress ?? ""
-          );
+        case "public":
+          comparison = Number((a.pod?.isPublic ?? false)) - Number((b.pod?.isPublic ?? false));
           break;
-        case "endpointCount":
-          comparison = a.derived.endpointCount - b.derived.endpointCount;
-          break;
-        case "latency":
-          const aLatency = a.probe?.latencyMs ?? 999999;
-          const bLatency = b.probe?.latencyMs ?? 999999;
-          comparison = aLatency - bLatency;
+        case "storageUsed":
+          comparison =
+            (a.pod?.storageUsedBytes ?? 0) - (b.pod?.storageUsedBytes ?? 0);
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;

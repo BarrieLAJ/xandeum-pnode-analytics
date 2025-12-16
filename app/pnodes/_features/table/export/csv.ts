@@ -31,20 +31,13 @@ export function pnodesToCSV(rows: PnodeRow[]): string {
 		"Short Pubkey",
 		"IP Address",
 		"Version",
-		"Shred Version",
-		"Feature Set",
-		"Has RPC",
-		"Has Pubsub",
-		"Endpoint Count",
-		"Gossip",
-		"RPC",
-		"Pubsub",
-		"TPU",
-		"TPU QUIC",
-		"TVU",
-		"RPC Reachable",
-		"Latency (ms)",
-		"Probe Error",
+		"Public",
+		"Last Seen (unix)",
+		"Uptime (s)",
+		"Storage Committed (bytes)",
+		"Storage Used (bytes)",
+		"Storage Usage (%)",
+		"pRPC URL",
 	];
 
 	const csvRows: string[] = [headers.join(",")];
@@ -55,24 +48,13 @@ export function pnodesToCSV(rows: PnodeRow[]): string {
 			row.derived.shortPubkey,
 			row.derived.ipAddress ?? "",
 			row.version ?? "",
-			row.shredVersion ?? "",
-			row.featureSet ?? "",
-			row.derived.hasRpc ? "Yes" : "No",
-			row.derived.hasPubsub ? "Yes" : "No",
-			row.derived.endpointCount,
-			row.endpoints.gossip ?? "",
-			row.endpoints.rpc ?? "",
-			row.endpoints.pubsub ?? "",
-			row.endpoints.tpu ?? "",
-			row.endpoints.tpuQuic ?? "",
-			row.endpoints.tvu ?? "",
-			row.probe?.rpcReachable !== undefined
-				? row.probe.rpcReachable
-					? "Yes"
-					: "No"
-				: "",
-			row.probe?.latencyMs ?? "",
-			row.probe?.error ?? "",
+			row.pod?.isPublic ? "Yes" : "No",
+			row.pod?.lastSeenTimestamp ?? "",
+			row.pod?.uptimeSeconds ?? "",
+			row.pod?.storageCommittedBytes ?? "",
+			row.pod?.storageUsedBytes ?? "",
+			row.pod?.storageUsagePercent ?? "",
+			row.pod?.prpcUrl ?? "",
 		];
 
 		csvRows.push(values.map(escapeCSV).join(","));

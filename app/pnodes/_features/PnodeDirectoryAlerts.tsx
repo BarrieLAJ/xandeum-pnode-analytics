@@ -7,8 +7,6 @@ interface PnodeDirectoryAlertsProps {
 	stale?: boolean;
 	/** Fetch errors */
 	errors?: string[];
-	/** Probe error message */
-	probeError?: string | null;
 }
 
 /**
@@ -17,9 +15,8 @@ interface PnodeDirectoryAlertsProps {
 export function PnodeDirectoryAlerts({
 	stale,
 	errors,
-	probeError,
 }: PnodeDirectoryAlertsProps) {
-	const hasAlerts = stale || (errors && errors.length > 0) || probeError;
+	const hasAlerts = stale || (errors && errors.length > 0);
 
 	if (!hasAlerts) return null;
 
@@ -49,16 +46,6 @@ export function PnodeDirectoryAlerts({
 				</div>
 			)}
 
-			{/* Probe error */}
-			{probeError && (
-				<div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
-					<AlertTriangle className="h-5 w-5 shrink-0" />
-					<div>
-						<p className="font-medium">Probe failed</p>
-						<p className="text-sm opacity-80">{probeError}</p>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }

@@ -5,7 +5,11 @@ import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown } from "lucide-react";
 
-type SortField = "pubkey" | "version" | "ip" | "endpointCount" | "latency";
+type SortField =
+  | "pubkey"
+  | "version"
+  | "public"
+  | "storageUsed";
 
 interface PnodeTableHeaderProps {
   sortField: SortField;
@@ -17,13 +21,11 @@ interface PnodeTableHeaderProps {
 const SortableHeader = ({
   field,
   currentField,
-  currentOrder,
   onSort,
   children,
 }: {
   field: SortField;
   currentField: SortField;
-  currentOrder: "asc" | "desc";
   onSort: (field: SortField) => void;
   children: React.ReactNode;
 }) => (
@@ -47,16 +49,15 @@ export function PnodeTableHeader({
   sortField,
   sortOrder,
   onSort,
-  showProbeColumn,
+  showProbeColumn: _showProbeColumn,
 }: PnodeTableHeaderProps) {
   return (
     <TableHeader>
       <TableRow className="bg-muted/30 hover:bg-muted/30">
-        <TableHead className="w-[300px]">
+        <TableHead className="w-[280px]">
           <SortableHeader
             field="pubkey"
             currentField={sortField}
-            currentOrder={sortOrder}
             onSort={onSort}
           >
             Pubkey
@@ -64,19 +65,8 @@ export function PnodeTableHeader({
         </TableHead>
         <TableHead>
           <SortableHeader
-            field="ip"
-            currentField={sortField}
-            currentOrder={sortOrder}
-            onSort={onSort}
-          >
-            IP Address
-          </SortableHeader>
-        </TableHead>
-        <TableHead>
-          <SortableHeader
             field="version"
             currentField={sortField}
-            currentOrder={sortOrder}
             onSort={onSort}
           >
             Version
@@ -84,27 +74,23 @@ export function PnodeTableHeader({
         </TableHead>
         <TableHead>
           <SortableHeader
-            field="endpointCount"
+            field="public"
             currentField={sortField}
-            currentOrder={sortOrder}
             onSort={onSort}
           >
-            Endpoints
+            Status
           </SortableHeader>
         </TableHead>
-        {showProbeColumn && (
-          <TableHead>
-            <SortableHeader
-              field="latency"
-              currentField={sortField}
-              currentOrder={sortOrder}
-              onSort={onSort}
-            >
-              RPC Health
-            </SortableHeader>
-          </TableHead>
-        )}
-        <TableHead className="text-right">Actions</TableHead>
+        <TableHead>
+          <SortableHeader
+            field="storageUsed"
+            currentField={sortField}
+            onSort={onSort}
+          >
+            Storage
+          </SortableHeader>
+        </TableHead>
+        <TableHead className="text-right w-[100px]">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

@@ -1,0 +1,116 @@
+import { NextResponse } from "next/server";
+import { rpcCall } from "@/lib/prpc/jsonRpcTransport";
+import { TransportError, TransportErrorCode } from "@/lib/prpc/transport";
+import { getPnodeById } from "@/lib/pnodes/service";
+import { parsePrpcGetStatsResult, type PrpcGetStatsResult } from "@/lib/pnodes/schemas";
+import { pnodeStatsCache } from "@/lib/cache/ttl";
+import { env } from "@/lib/config/env";
+import { insertPodStatsSample } from "@/lib/db/queries";
+import { badRequest, notFound, serverError } from "@/lib/api/errors";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * GET /api/pnodes/[id]/stats
+ *
+ * Fetches live pRPC `get stats` for a specific pNode (hybrid mode: on-demand).
+ */
+export async function GET(_request: Request, { params }: RouteParams) {
+  try {
+    const { id: pubkey } = await params;
+
+    if (!pubkey) {
+      return badRequest("Missing pubkey parameter");
+    }
+
+    const node = await getPnodeById(pubkey);
+    if (!node) {
+      return notFound("pNode not found", undefined, { pubkey });
+    }
+
+    const prpcUrl = node.pod?.prpcUrl;
+    if (!prpcUrl) {
+      return notFound("pNode pRPC endpoint not available", undefined, { pubkey });
+    }
+
+    const cacheKey = `pnode:stats:${pubkey}`;
+    let value: PrpcGetStatsResult;
+    let fromCache: boolean;
+
+    try {
+      const result = await pnodeStatsCache.getOrSet(
+        cacheKey,
+        async () => {
+          // Doc method name is "get stats" (with a space)
+          const result = await rpcCall<unknown>(prpcUrl, "get stats", []);
+          return parsePrpcGetStatsResult(result.data);
+        },
+        15_000
+      );
+      value = result.value as PrpcGetStatsResult;
+      fromCache = result.fromCache;
+    } catch (error) {
+      // Handle "Method not found" gracefully - not all nodes support get stats
+      if (
+        error instanceof TransportError &&
+        error.code === TransportErrorCode.RPC_ERROR &&
+        error.rpcError?.code === -32601
+      ) {
+        return notFound(
+          "Stats method not available on this pNode",
+          undefined,
+          { pubkey, prpcUrl }
+        );
+      }
+      throw error;
+    }
+
+    const statsResult = value;
+
+    // If DB is configured, persist a sampled point (hybrid history).
+    // Only persist when not served from cache to reduce duplicates.
+    if (!fromCache && env.DATABASE_URL) {
+      const now = new Date();
+      const stats = statsResult.stats;
+      await insertPodStatsSample({
+        ts: now,
+        pubkey,
+        prpcUrl,
+        cpuPercent: stats?.cpu_percent ?? null,
+        ramUsedBytes: stats?.ram_used ?? null,
+        ramTotalBytes: stats?.ram_total ?? null,
+        uptimeSeconds: stats?.uptime ?? null,
+        packetsReceived: stats?.packets_received ?? null,
+        packetsSent: stats?.packets_sent ?? null,
+        activeStreams: stats?.active_streams ?? null,
+        raw: statsResult,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        generatedAt: new Date().toISOString(),
+        pubkey,
+        prpcUrl,
+        fromCache,
+        stats: statsResult,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Error fetching pNode stats:", error);
+    return serverError("Failed to fetch pNode stats", error);
+  }
+}
+
+

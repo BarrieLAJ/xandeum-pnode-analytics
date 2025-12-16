@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, truncateVersion } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -114,6 +114,7 @@ export function VersionBadge({
   }
 
   const isModal = modalVersion && version === modalVersion;
+  const displayVersion = truncateVersion(version, 12);
 
   return (
     <TooltipProvider>
@@ -129,14 +130,14 @@ export function VersionBadge({
               className
             )}
           >
-            {version}
+            {displayVersion}
           </Badge>
         </TooltipTrigger>
         <TooltipContent>
           <p>
-            {isModal
-              ? "Running the most common version"
-              : `Different from modal version (${modalVersion ?? "unknown"})`}
+            Version: {version}
+            {isModal && " (most common)"}
+            {!isModal && modalVersion && ` (modal: ${modalVersion})`}
           </p>
         </TooltipContent>
       </Tooltip>

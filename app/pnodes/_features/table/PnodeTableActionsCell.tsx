@@ -16,15 +16,16 @@ interface PnodeTableActionsCellProps {
 }
 
 export function PnodeTableActionsCell({ row }: PnodeTableActionsCellProps) {
+  const prpcUrl = row.pod?.prpcUrl ?? (row.endpoints.rpc ? `http://${row.endpoints.rpc}/rpc` : null);
   return (
     <TableCell className="text-right">
       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {row.endpoints.rpc && (
+        {prpcUrl && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <a
-                  href={`http://${row.endpoints.rpc}`}
+                  href={prpcUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 rounded hover:bg-muted"
@@ -32,7 +33,7 @@ export function PnodeTableActionsCell({ row }: PnodeTableActionsCellProps) {
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               </TooltipTrigger>
-              <TooltipContent>Open RPC endpoint</TooltipContent>
+              <TooltipContent>Open pRPC endpoint</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}

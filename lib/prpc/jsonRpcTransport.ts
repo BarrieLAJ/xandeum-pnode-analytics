@@ -9,6 +9,8 @@ import {
   isJsonRpcError,
 } from "./transport";
 import { getPrpcTimeoutMs } from "@/lib/config/env";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 
 /**
  * Auto-incrementing request ID generator
@@ -16,6 +18,63 @@ import { getPrpcTimeoutMs } from "@/lib/config/env";
 let requestIdCounter = 1;
 function generateRequestId(): number {
   return requestIdCounter++;
+}
+
+async function postJson(urlString: string, body: string, timeoutMs: number): Promise<{
+  status: number;
+  statusText: string;
+  bodyText: string;
+}> {
+  const url = new URL(urlString);
+  const isHttps = url.protocol === "https:";
+  const reqFn = isHttps ? httpsRequest : httpRequest;
+
+  return await new Promise((resolve, reject) => {
+    const req = reqFn(
+      {
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port ? Number(url.port) : undefined,
+        path: `${url.pathname}${url.search}`,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          "Connection": "keep-alive", // Reuse connections for better performance
+        },
+        timeout: timeoutMs, // Set socket timeout
+      },
+      (res) => {
+        let bodyText = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => {
+          bodyText += chunk;
+        });
+        res.on("end", () => {
+          resolve({
+            status: res.statusCode ?? 0,
+            statusText: res.statusMessage ?? "",
+            bodyText,
+          });
+        });
+      }
+    );
+
+    const timeoutId = setTimeout(() => {
+      req.destroy(new Error("Request timed out"));
+    }, timeoutMs);
+
+    req.on("error", (err) => {
+      clearTimeout(timeoutId);
+      reject(err);
+    });
+    req.on("close", () => {
+      clearTimeout(timeoutId);
+    });
+
+    req.write(body);
+    req.end();
+  });
 }
 
 /**
@@ -38,10 +97,6 @@ class JsonRpcHttpTransport implements Transport {
 
     const startTime = performance.now();
 
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
     // Build JSON-RPC request
     const rpcRequest: JsonRpcRequest = {
       jsonrpc: "2.0",
@@ -51,19 +106,17 @@ class JsonRpcHttpTransport implements Transport {
     };
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(rpcRequest),
-        signal: controller.signal,
-      });
+      // NOTE: Node's built-in fetch blocks some ports (including 6000).
+      // Use node:http/https so we can call pNode pRPC on :6000.
+      const { status, statusText, bodyText } = await postJson(
+        url,
+        JSON.stringify(rpcRequest),
+        timeoutMs
+      );
 
-      // Check HTTP status
-      if (!response.ok) {
+      if (status < 200 || status >= 300) {
         throw new TransportError(
-          `HTTP ${response.status}: ${response.statusText}`,
+          `HTTP ${status}: ${statusText}`,
           TransportErrorCode.HTTP_ERROR
         );
       }
@@ -71,7 +124,7 @@ class JsonRpcHttpTransport implements Transport {
       // Parse JSON response
       let jsonResponse: JsonRpcResponse<T>;
       try {
-        jsonResponse = await response.json();
+        jsonResponse = JSON.parse(bodyText) as JsonRpcResponse<T>;
       } catch (parseError) {
         throw new TransportError(
           "Failed to parse JSON response",
@@ -97,8 +150,12 @@ class JsonRpcHttpTransport implements Transport {
         durationMs,
       };
     } catch (error) {
-      // Handle abort/timeout
-      if (error instanceof Error && error.name === "AbortError") {
+      // Handle timeout
+      if (
+        error instanceof Error &&
+        (error.name === "AbortError" ||
+          error.message.toLowerCase().includes("timed out"))
+      ) {
         throw new TransportError(
           `Request timed out after ${timeoutMs}ms`,
           TransportErrorCode.TIMEOUT,
@@ -113,12 +170,14 @@ class JsonRpcHttpTransport implements Transport {
 
       // Wrap other errors as network errors
       throw new TransportError(
-        error instanceof Error ? error.message : "Network request failed",
+        error instanceof Error
+          ? error.cause instanceof Error
+            ? `${error.message} (${error.cause.message})`
+            : error.message
+          : "Network request failed",
         TransportErrorCode.NETWORK_ERROR,
         error
       );
-    } finally {
-      clearTimeout(timeoutId);
     }
   }
 }

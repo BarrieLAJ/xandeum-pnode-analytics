@@ -1,7 +1,15 @@
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, Hash, Code } from "lucide-react";
+import { GitBranch, Database, Timer, Globe } from "lucide-react";
 import { PnodeDetailNetworkContext } from "./PnodeDetailNetworkContext";
+import { PnodeDetailSystemStats } from "./PnodeDetailSystemStats";
+import { formatBytes, formatDurationSeconds, truncateVersion } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PnodeDetailOverviewProps {
   node: PnodeRow;
@@ -14,7 +22,7 @@ export function PnodeDetailOverview({
 }: PnodeDetailOverviewProps) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -23,14 +31,25 @@ export function PnodeDetailOverview({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold font-mono">
-              {node.version ?? "Unknown"}
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-2xl font-bold font-mono cursor-help">
+                    {node.version ? truncateVersion(node.version, 15) : "Unknown"}
+                  </p>
+                </TooltipTrigger>
+                {node.version && (
+                  <TooltipContent>
+                    <p>Full version: {node.version}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
             {snapshot.stats.modalVersion && (
               <p className="text-sm text-muted-foreground mt-1">
                 {node.version === snapshot.stats.modalVersion
                   ? "Running the most common version"
-                  : `Modal version: ${snapshot.stats.modalVersion}`}
+                  : `Modal version: ${truncateVersion(snapshot.stats.modalVersion, 15)}`}
               </p>
             )}
           </CardContent>
@@ -39,16 +58,16 @@ export function PnodeDetailOverview({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Hash className="h-4 w-4" />
-              Shred Version
+              <Database className="h-4 w-4" />
+              Storage
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold font-mono">
-              {node.shredVersion ?? "—"}
+              {formatBytes(node.pod?.storageUsedBytes)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Consensus protocol version
+              Committed: {formatBytes(node.pod?.storageCommittedBytes)}
             </p>
           </CardContent>
         </Card>
@@ -56,20 +75,44 @@ export function PnodeDetailOverview({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Code className="h-4 w-4" />
-              Feature Set
+              <Timer className="h-4 w-4" />
+              Uptime / Last seen
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold font-mono">
-              {node.featureSet ?? "—"}
+              {formatDurationSeconds(node.pod?.uptimeSeconds)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Enabled feature flags
+              {node.pod?.lastSeenTimestamp
+                ? `Last seen: ${new Date(
+                    node.pod.lastSeenTimestamp * 1000
+                  ).toLocaleString()}`
+                : "Last seen: —"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Public
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold font-mono">
+              {node.pod?.isPublic ? "Yes" : "No"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              pRPC: {node.pod?.prpcUrl ?? "—"}
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Live (on-demand) pRPC stats */}
+      <PnodeDetailSystemStats pubkey={node.pubkey} />
 
       <PnodeDetailNetworkContext snapshot={snapshot} />
     </div>

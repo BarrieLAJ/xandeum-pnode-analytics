@@ -3,7 +3,7 @@ import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { VersionBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Server, Globe, Radio, Hash } from "lucide-react";
+import { ArrowLeft, Server, Globe, Hash } from "lucide-react";
 
 interface PnodeDetailHeaderProps {
   node: PnodeRow;
@@ -56,8 +56,7 @@ export function PnodeDetailHeader({ node, snapshot }: PnodeDetailHeaderProps) {
             {node.derived.ipAddress ?? "Unknown IP"}
           </Badge>
           <Badge variant="outline" className="gap-1.5">
-            <Radio className="h-3 w-3" />
-            {node.derived.endpointCount}/10 endpoints
+            {node.pod?.isPublic ? "Public" : "Private"}
           </Badge>
         </div>
       </div>

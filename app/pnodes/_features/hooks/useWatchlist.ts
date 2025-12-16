@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   getWatchlist,
   addToWatchlist,
@@ -12,14 +12,7 @@ import {
  * React hook for managing the pNode watchlist
  */
 export function useWatchlist() {
-  const [watchlist, setWatchlist] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load watchlist on mount (client-side only)
-  useEffect(() => {
-    setWatchlist(getWatchlist());
-    setIsLoaded(true);
-  }, []);
+  const [watchlist, setWatchlist] = useState<string[]>(() => getWatchlist());
 
   const isWatched = useCallback(
     (pubkey: string) => watchlist.includes(pubkey),
@@ -56,7 +49,6 @@ export function useWatchlist() {
 
   return {
     watchlist,
-    isLoaded,
     isWatched,
     add,
     remove,

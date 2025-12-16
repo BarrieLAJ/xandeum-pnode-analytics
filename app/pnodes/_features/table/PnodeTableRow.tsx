@@ -3,17 +3,11 @@
 import { PnodeRow } from "@/lib/pnodes/model";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { VersionBadge } from "@/components/shared/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WatchlistButton } from "../WatchlistButton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { Server, Globe, Radio } from "lucide-react";
-import { PnodeTableProbeCell } from "./PnodeTableProbeCell";
+import { cn, formatBytes } from "@/lib/utils";
+import { Server } from "lucide-react";
 import { PnodeTableActionsCell } from "./PnodeTableActionsCell";
 
 interface PnodeTableRowProps {
@@ -27,7 +21,7 @@ interface PnodeTableRowProps {
 export function PnodeTableRow({
   row,
   modalVersion,
-  showProbeColumn,
+  showProbeColumn: _showProbeColumn,
   isWatched,
   onToggleWatchlist,
 }: PnodeTableRowProps) {
@@ -52,41 +46,32 @@ export function PnodeTableRow({
         </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="font-mono text-sm">
-            {row.derived.ipAddress ?? "—"}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
         <VersionBadge version={row.version} modalVersion={modalVersion} />
       </TableCell>
       <TableCell>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-2">
-                <Radio
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    row.derived.hasRpc ? "text-chart-2" : "text-muted-foreground"
-                  )}
-                />
-                <span className="text-sm">{row.derived.endpointCount}/10</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-xs space-y-1">
-                <p>RPC: {row.derived.hasRpc ? "Yes" : "No"}</p>
-                <p>Pubsub: {row.derived.hasPubsub ? "Yes" : "No"}</p>
-                <p>{row.derived.endpointCount} of 10 endpoints available</p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <StatusBadge
+          status={row.pod?.isPublic ? "online" : "offline"}
+          label={row.pod?.isPublic ? "Public" : "Private"}
+          tooltip={
+            row.pod?.isPublic
+              ? "pRPC endpoint is publicly reachable"
+              : "pRPC endpoint is not publicly reachable"
+          }
+          className={cn("text-xs")}
+        />
       </TableCell>
-      {showProbeColumn && <PnodeTableProbeCell row={row} />}
+      <TableCell>
+        <div className="flex flex-col gap-0.5">
+          <span className="font-mono text-sm">
+            {formatBytes(row.pod?.storageUsedBytes)}
+          </span>
+          {row.pod?.storageCommittedBytes && (
+            <span className="font-mono text-xs text-muted-foreground">
+              / {formatBytes(row.pod.storageCommittedBytes)}
+            </span>
+          )}
+        </div>
+      </TableCell>
       <PnodeTableActionsCell row={row} />
     </TableRow>
   );
