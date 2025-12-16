@@ -7,41 +7,60 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 function parseRange(value: string | null): HistoryRange {
-  if (value === "24h" || value === "7d" || value === "30d") return value;
-  return "24h";
+	if (value === "24h" || value === "7d" || value === "30d") return value;
+	return "24h";
 }
 
 /**
  * GET /api/history/network?range=24h|7d|30d
  */
 export async function GET(request: Request) {
-  try {
-    if (!env.DATABASE_URL) {
-      return badRequest("DATABASE_URL_MISSING", "Historical data is not configured");
-    }
+	try {
+		if (!env.DATABASE_URL) {
+			return badRequest(
+				"DATABASE_URL_MISSING",
+				"Historical data is not configured"
+			);
+		}
 
-    const { searchParams } = new URL(request.url);
-    const range = parseRange(searchParams.get("range"));
+		const { searchParams } = new URL(request.url);
+		const range = parseRange(searchParams.get("range"));
 
-    const rows = await getNetworkHistory(range);
+		const rows = await getNetworkHistory(range);
 
-    return NextResponse.json(
-      {
-        generatedAt: new Date().toISOString(),
-        range,
-        points: rows,
-      },
-      {
-        status: 200,
-        headers: {
-          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("Error fetching network history:", error);
-    return serverError("Failed to fetch network history", error);
-  }
+		return NextResponse.json(
+			{
+				generatedAt: new Date().toISOString(),
+				range,
+				points: rows,
+			},
+			{
+				status: 200,
+				headers: {
+					"Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
+				},
+			}
+		);
+	} catch (error) {
+		console.error("Error fetching network history:", error);
+		const err = error as Error;
+
+		// Check if tables don't exist
+		if (
+			// @ts-expect-error - cause is not typed
+			err.cause?.code === "42P01" ||
+			err.message?.includes("does not exist")
+		) {
+			return NextResponse.json(
+				{
+					error: "DATABASE_NOT_SETUP",
+					message:
+						"Database tables have not been created. Please run: pnpm db:setup",
+				},
+				{ status: 503 }
+			);
+		}
+
+		return serverError("Failed to fetch network history", error);
+	}
 }
-
-

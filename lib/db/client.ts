@@ -1,20 +1,26 @@
-import { neon } from "@neondatabase/serverless";
+// src/db.ts
 import { drizzle } from "drizzle-orm/neon-http";
-import { env } from "@/lib/config/env";
+import { neon } from "@neondatabase/serverless";
 
-/**
- * Drizzle + Neon client.
- *
- * NOTE: `DATABASE_URL` is optional until historical charts are enabled.
- * Any code path that uses the DB must assert it's present.
- */
-export function getDb() {
-  if (!env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set (required for historical data)");
-  }
-
-  const sql = neon(env.DATABASE_URL);
-  return drizzle(sql);
+// Strip quotes from DATABASE_URL if present (common in .env files)
+function getDatabaseUrl(): string {
+	const url = process.env.DATABASE_URL;
+	if (!url) {
+		throw new Error("DATABASE_URL is not set. Database features are disabled.");
+	}
+	// Remove surrounding quotes if present
+	return url.replace(/^["']|["']$/g, "");
 }
 
+// Lazy initialization - only create when DATABASE_URL is available
+let _db: ReturnType<typeof drizzle> | null = null;
 
+export function getDb() {
+	if (!_db) {
+		const url = getDatabaseUrl();
+		const sql = neon(url);
+		_db = drizzle({ client: sql });
+	}
+
+	return _db;
+}
