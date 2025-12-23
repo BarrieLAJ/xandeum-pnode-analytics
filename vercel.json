@@ -2,8 +2,7 @@
     "crons": [
         {
             "path": "/api/cron/ingest-snapshot",
-            "schedule": "0 10 * * *",
-            "method": "POST"
+            "schedule": "0 10 * * *"
         }
     ]
 }

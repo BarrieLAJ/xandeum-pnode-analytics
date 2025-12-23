@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { getSnapshot } from "@/lib/pnodes/service";
 import { insertNetworkSnapshot, insertPodSnapshots } from "@/lib/db/queries";
-import { badRequest, serverError } from "@/lib/api/errors";
+import { serverError } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,13 +15,13 @@ function authorize(request: Request): boolean {
 }
 
 /**
- * POST /api/cron/ingest-snapshot
+ * GET /api/cron/ingest-snapshot
  *
  * Periodically persists network + per-pod snapshots for historical charts.
  * Protected by `CRON_SECRET` via Authorization header (Bearer token).
  * Vercel automatically includes this header in cron job invocations.
  */
-export async function POST(request: Request) {
+export async function GET(request: Request) {
 	try {
 		if (!authorize(request)) {
 			return new Response("Unauthorized", { status: 401 });
@@ -78,9 +78,4 @@ export async function POST(request: Request) {
 		console.error("Error ingesting snapshot:", error);
 		return serverError("Failed to ingest snapshot", error);
 	}
-}
-
-// Disallow other methods
-export async function GET() {
-	return badRequest("METHOD_NOT_ALLOWED", "Use POST");
 }
