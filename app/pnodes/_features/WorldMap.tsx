@@ -3,24 +3,9 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Loader2 } from "lucide-react";
-import { NodeGeoData } from "./api";
+import { NodeGeoData } from "./api-geo";
 import { useWorldMapData } from "./hooks/useWorldMap";
 import { WorldMapHeader, WorldMapContent, WorldMapLegend } from "./map";
-
-interface HoveredMarker {
-	key: string;
-	x: number;
-	y: number;
-	nodes: {
-		pubkey: string;
-		shortPubkey: string;
-		city: string;
-		country: string;
-		countryCode: string;
-		isp: string;
-		coordinates: [number, number];
-	}[];
-}
 
 export function WorldMap() {
 	const {

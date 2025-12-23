@@ -1,8 +1,10 @@
 "use client";
 
 export function WorldMapStyles() {
-  return (
-    <style dangerouslySetInnerHTML={{ __html: `
+	return (
+		<style
+			dangerouslySetInnerHTML={{
+				__html: `
       @keyframes marker-glow {
         0%, 100% {
           opacity: 0.3;
@@ -27,7 +29,8 @@ export function WorldMapStyles() {
       .marker-breathe {
         animation: marker-breathe 1.5s ease-in-out infinite;
       }
-    `}} />
-  );
+    `,
+			}}
+		/>
+	);
 }
-

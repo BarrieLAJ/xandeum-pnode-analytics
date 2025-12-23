@@ -1,5 +1,5 @@
 /**
- * Geo API client for home page features
+ * Geo API client for pNode features
  * Colocated with the features that use it
  */
 
@@ -54,4 +54,3 @@ export interface GeoApiResponse {
 export function getGeoData(limit = 50): Promise<GeoApiResponse> {
 	return apiGet<GeoApiResponse>("/api/pnodes/geo", { limit });
 }
-

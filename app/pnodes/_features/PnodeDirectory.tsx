@@ -8,6 +8,7 @@ import { NetworkHistoryCard } from "./charts/NetworkHistoryCard";
 import { PnodeDirectoryAlerts } from "./PnodeDirectoryAlerts";
 import { PnodeDirectoryKpis } from "./PnodeDirectoryKpis";
 import { PnodeDirectoryHeader } from "./PnodeDirectoryHeader";
+import { GeoVisualization } from "./GeoVisualization";
 import { useWatchlist } from "./hooks/useWatchlist";
 
 interface PnodeDirectoryProps {
@@ -16,29 +17,20 @@ interface PnodeDirectoryProps {
 
 export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 	const [snapshot] = useState(initialSnapshot);
-
-	// Watchlist hook
 	const {
 		watchlist,
 		toggle: toggleWatchlist,
 		count: watchlistCount,
 	} = useWatchlist();
-
 	const versions = Object.keys(snapshot.stats.versionDistribution).sort();
 
 	return (
 		<div className="space-y-8 animate-fade-in">
 			{/* Alerts */}
-			<PnodeDirectoryAlerts
-				stale={snapshot.stale}
-				errors={snapshot.errors}
-			/>
+			<PnodeDirectoryAlerts stale={snapshot.stale} errors={snapshot.errors} />
 
 			{/* KPI Cards */}
-			<PnodeDirectoryKpis
-				stats={snapshot.stats}
-				watchlistCount={watchlistCount}
-			/>
+			<PnodeDirectoryKpis stats={snapshot.stats} watchlistCount={watchlistCount} />
 
 			{/* Page header */}
 			<PnodeDirectoryHeader
@@ -68,6 +60,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 						modalVersion={snapshot.stats.modalVersion}
 					/>
 					<NetworkHistoryCard />
+					<GeoVisualization />
 				</div>
 			</div>
 		</div>

@@ -26,7 +26,7 @@ interface PnodeTableProps {
 	probing?: boolean;
 	onProbe?: () => void;
 	watchlist?: string[];
-	onToggleWatchlist?: (pubkey: string) => void;
+	onToggleWatchlist?: (pubkey: string) => boolean | void;
 	showWatchlistFilter?: boolean;
 }
 
