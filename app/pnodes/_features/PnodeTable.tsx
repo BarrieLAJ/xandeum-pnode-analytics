@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { PnodeRow } from "@/lib/pnodes/model";
 import {
@@ -8,15 +8,14 @@ import {
 	downloadCSV,
 	generateExportFilename,
 } from "./table/export/csv";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 import {
 	PnodeTableFilters,
 	PnodeTableToolbar,
-	PnodeTableHeader,
-	PnodeTableRow,
 	PnodeTablePagination,
 	usePnodeTableFilters,
 } from "./table";
+import { createPnodeTableColumns } from "./table/PnodeTableColumns";
 
 interface PnodeTableProps {
 	rows: PnodeRow[];
@@ -67,6 +66,29 @@ export function PnodeTable({
 		previousPage,
 	} = usePnodeTableFilters({ rows, watchlist });
 
+	// Create column definitions
+	const columns = useMemo(
+		() =>
+			createPnodeTableColumns({
+				modalVersion,
+				watchlist,
+				onToggleWatchlist,
+			}),
+		[modalVersion, watchlist, onToggleWatchlist]
+	);
+
+	// Map TanStack column IDs to our sort field types
+	const sortFieldMap: Record<string, "pubkey" | "version" | "public" | "storageUsed" | "credits"> = useMemo(
+		() => ({
+			pubkey: "pubkey",
+			version: "version",
+			status: "public",
+			storage: "storageUsed",
+			credits: "credits",
+		}),
+		[]
+	);
+
 	const handleExport = useCallback(() => {
 		const csv = pnodesToCSV(filteredRows);
 		const filename = generateExportFilename("xandeum-pnodes");
@@ -109,31 +131,32 @@ export function PnodeTable({
 			<div className="flex-1 flex flex-col min-h-0 rounded-lg border border-border/50 bg-card overflow-hidden">
 				{/* Table with sticky header - Scrollable body */}
 				<div className="flex-1 overflow-auto scrollbar-thin min-h-0">
-					<Table>
-						<PnodeTableHeader sortField={sortField} onSort={toggleSort} />
-						<TableBody>
-							{paginatedRows.length === 0 ? (
-								<TableRow>
-									<TableCell
-										colSpan={8}
-										className="h-24 text-center text-muted-foreground"
-									>
-										No pNodes found matching your criteria.
-									</TableCell>
-								</TableRow>
-							) : (
-								paginatedRows.map((row) => (
-									<PnodeTableRow
-										key={row.pubkey}
-										row={row}
-										modalVersion={modalVersion}
-										isWatched={watchlist.includes(row.pubkey)}
-										onToggleWatchlist={onToggleWatchlist}
-									/>
-								))
-							)}
-						</TableBody>
-					</Table>
+					<DataTable<PnodeRow>
+						columns={columns}
+						data={paginatedRows}
+						sorting={{
+							sortField: sortField,
+							onSort: (columnId) => {
+								const field = sortFieldMap[columnId];
+								if (field) toggleSort(field);
+							},
+							fieldMap: sortFieldMap,
+						}}
+						emptyConfig={{
+							message: "No pNodes found matching your criteria.",
+							colSpan: columns.length,
+						}}
+						getRowId={(row) => row.pubkey}
+						getRowClassName={() => "group"}
+						getHeaderClassName={(columnId) => {
+							if (columnId === "pubkey") return "w-[280px]";
+							if (columnId === "actions") return "text-right w-[100px]";
+							return undefined;
+						}}
+						manualSorting={true}
+						manualPagination={true}
+						enableSorting={true}
+					/>
 				</div>
 				{/* Pagination - Fixed at bottom, always visible */}
 				<div className="shrink-0 border-t bg-card">

@@ -10,3 +10,4 @@ export { PnodeTableProbeCell } from "./PnodeTableProbeCell";
 export { PnodeTableActionsCell } from "./PnodeTableActionsCell";
 export { PnodeTablePagination } from "./PnodeTablePagination";
 export { usePnodeTableFilters } from "../hooks/usePnodeTableFilters";
+export { createPnodeTableColumns, type PnodeTableColumnDef } from "./PnodeTableColumns";
