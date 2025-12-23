@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { Server, Globe, Database, Timer } from "lucide-react";
 import type { SnapshotStats } from "@/lib/pnodes/model";
@@ -17,6 +18,13 @@ export function PnodeDirectoryKpis({
 	stats,
 	watchlistCount,
 }: PnodeDirectoryKpisProps) {
+	// Fix hydration: only show watchlist count after client-side mount
+	const [mounted, setMounted] = useState(false);
+	
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	return (
 		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 			<MetricCard
@@ -45,7 +53,7 @@ export function PnodeDirectoryKpis({
 			<MetricCard
 				title="Avg Uptime"
 				value={formatDurationSeconds(stats.avgUptimeSeconds ?? undefined)}
-				subtitle={`${watchlistCount} watched`}
+				subtitle={mounted ? `${watchlistCount} watched` : "Average uptime"}
 				icon={Timer}
 				delay={150}
 			/>

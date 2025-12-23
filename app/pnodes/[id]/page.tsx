@@ -1,14 +1,10 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getPnodeById, getSnapshot } from "@/lib/pnodes/service";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	PnodeDetailHeader,
 	PnodeDetailOverview,
-	PnodeDetailEndpoints,
-	PnodeDetailRaw,
 } from "./_features";
-import { PnodeDetailHistory } from "./_features/PnodeDetails/PnodeDetailHistory";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -31,31 +27,7 @@ async function PnodeDetailContent({ pubkey }: { pubkey: string }) {
 		<div className="space-y-8 animate-fade-in">
 			<PnodeDetailHeader node={node} snapshot={snapshot} />
 
-			{/* Tabs */}
-			<Tabs defaultValue="overview" className="space-y-6">
-				<TabsList>
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="history">History</TabsTrigger>
-					<TabsTrigger value="endpoints">Endpoints</TabsTrigger>
-					<TabsTrigger value="raw">Raw JSON</TabsTrigger>
-				</TabsList>
-
-				<TabsContent value="overview">
-					<PnodeDetailOverview node={node} snapshot={snapshot} />
-				</TabsContent>
-
-				<TabsContent value="history">
-					<PnodeDetailHistory pubkey={node.pubkey} />
-				</TabsContent>
-
-				<TabsContent value="endpoints">
-					<PnodeDetailEndpoints node={node} />
-				</TabsContent>
-
-				<TabsContent value="raw">
-					<PnodeDetailRaw node={node} />
-				</TabsContent>
-			</Tabs>
+			<PnodeDetailOverview node={node} snapshot={snapshot} />
 		</div>
 	);
 }

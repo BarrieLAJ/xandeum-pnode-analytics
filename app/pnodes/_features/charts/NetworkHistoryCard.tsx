@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { useQuery } from "@/lib/query/client";
 import { getNetworkHistory } from "@/app/pnodes/_features/api";
@@ -32,16 +32,25 @@ export function NetworkHistoryCard() {
     }))
     .reverse();
 
-  const config = {
-    committed: { label: "Committed", color: "hsl(var(--chart-3))" },
-    used: { label: "Used", color: "hsl(var(--chart-2))" },
-    publicPods: { label: "Public pods", color: "hsl(var(--chart-1))" },
+  const storageConfig = {
+    committed: { label: "Committed", color: "var(--chart-3)" },
+    used: { label: "Used", color: "var(--chart-2)" },
+  } as const;
+
+  const networkSizeConfig = {
+    totalPods: { label: "Total pNodes", color: "var(--chart-1)" },
+    publicPods: { label: "Public pNodes", color: "var(--chart-2)" },
   } as const;
 
   return (
     <Card className="animate-fade-in">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Historical Storage (Network)</CardTitle>
+        <div>
+          <CardTitle className="text-base">Network Trends</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Historical view of network storage and size over time
+          </p>
+        </div>
         <Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
           <TabsList>
             <TabsTrigger value="24h">24h</TabsTrigger>
@@ -50,7 +59,7 @@ export function NetworkHistoryCard() {
           </TabsList>
         </Tabs>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         {query.isLoading ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : query.error ? (
@@ -58,46 +67,106 @@ export function NetworkHistoryCard() {
             Historical data unavailable: {query.error.message}
           </div>
         ) : (
-          <ChartContainer config={config} className="h-[280px]">
-            <LineChart data={points} accessibilityLayer>
-              <CartesianGrid vertical={false} />
-              <XAxis dataKey="ts" tickLine={false} axisLine={false} hide />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => formatBytes(v)}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    formatter={(value, name) => (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">{name}</span>
-                        <span className="text-muted-foreground">
-                          {typeof value === "number" ? formatBytes(value) : String(value)}
-                        </span>
-                      </div>
-                    )}
+          <>
+            {/* Storage Trends */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Storage</h3>
+              <ChartContainer config={storageConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                <AreaChart data={points} accessibilityLayer>
+                  <defs>
+                    <linearGradient id="committedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-committed)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--color-committed)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="usedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-used)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--color-used)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="ts" tickLine={false} axisLine={false} hide />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => formatBytes(v)}
                   />
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="committed"
-                stroke="var(--color-committed)"
-                strokeWidth={2}
-                dot={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="used"
-                stroke="var(--color-used)"
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ChartContainer>
+                  <ChartTooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name) => (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{name}</span>
+                            <span className="text-muted-foreground">
+                              {typeof value === "number" ? formatBytes(value) : String(value)}
+                            </span>
+                          </div>
+                        )}
+                      />
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="committed"
+                    stroke="var(--color-committed)"
+                    fill="url(#committedGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="used"
+                    stroke="var(--color-used)"
+                    fill="url(#usedGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
+
+            {/* Network Size Trends */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Network Size</h3>
+              <ChartContainer config={networkSizeConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                <AreaChart data={points} accessibilityLayer>
+                  <defs>
+                    <linearGradient id="totalPodsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-totalPods)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--color-totalPods)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="publicPodsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-publicPods)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--color-publicPods)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="ts" tickLine={false} axisLine={false} hide />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="totalPods"
+                    stroke="var(--color-totalPods)"
+                    fill="url(#totalPodsGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="publicPods"
+                    stroke="var(--color-publicPods)"
+                    fill="url(#publicPodsGradient)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

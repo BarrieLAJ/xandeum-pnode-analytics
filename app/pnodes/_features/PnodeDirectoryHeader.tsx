@@ -1,18 +1,13 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Star, BarChart3 } from "lucide-react";
+import { Star } from "lucide-react";
 
 interface PnodeDirectoryHeaderProps {
   /** Source method from snapshot */
   sourceMethod: string;
   /** Number of watched nodes */
   watchlistCount: number;
-  /** Whether charts are visible */
-  showCharts: boolean;
-  /** Toggle charts visibility */
-  onToggleCharts: () => void;
 }
 
 /**
@@ -21,8 +16,6 @@ interface PnodeDirectoryHeaderProps {
 export function PnodeDirectoryHeader({
   sourceMethod,
   watchlistCount,
-  showCharts,
-  onToggleCharts,
 }: PnodeDirectoryHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -33,15 +26,6 @@ export function PnodeDirectoryHeader({
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          variant={showCharts ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleCharts}
-          className="gap-2"
-        >
-          <BarChart3 className="h-3.5 w-3.5" />
-          {showCharts ? "Hide Charts" : "Show Charts"}
-        </Button>
         <Badge variant="outline" className="gap-1.5">
           <span className="h-2 w-2 rounded-full bg-chart-2 animate-pulse" />
           Live

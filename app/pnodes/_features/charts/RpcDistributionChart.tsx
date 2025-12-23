@@ -22,11 +22,11 @@ export function RpcDistributionChart({ rows }: RpcDistributionChartProps) {
 	return (
 		<div className="space-y-4">
 			<p className="text-sm text-muted-foreground">
-				RPC endpoint availability across the network
+				Public pRPC endpoint availability. Nodes with public RPC can be queried directly for stats and health checks.
 			</p>
 			<ChartContainer
 				config={rpcConfig}
-				className="mx-auto aspect-square max-h-[300px]"
+				className="mx-auto aspect-square max-h-[240px] sm:max-h-[280px] lg:max-h-[300px] w-full"
 			>
 				<PieChart>
 					<ChartTooltip

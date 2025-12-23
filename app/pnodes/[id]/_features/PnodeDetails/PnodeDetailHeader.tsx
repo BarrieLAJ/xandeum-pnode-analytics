@@ -1,9 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { VersionBadge } from "@/components/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Server, Globe, Hash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Server, Globe, Hash, Code } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface PnodeDetailHeaderProps {
   node: PnodeRow;
@@ -45,19 +56,49 @@ export function PnodeDetailHeader({ node, snapshot }: PnodeDetailHeaderProps) {
           </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="flex flex-wrap gap-2">
-          <VersionBadge
-            version={node.version}
-            modalVersion={snapshot.stats.modalVersion}
-          />
-          <Badge variant="outline" className="gap-1.5">
-            <Globe className="h-3 w-3" />
-            {node.derived.ipAddress ?? "Unknown IP"}
-          </Badge>
-          <Badge variant="outline" className="gap-1.5">
-            {node.pod?.isPublic ? "Public" : "Private"}
-          </Badge>
+        {/* Quick stats and actions */}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2">
+            <VersionBadge
+              version={node.version}
+              modalVersion={snapshot.stats.modalVersion}
+            />
+            <Badge variant="outline" className="gap-1.5">
+              <Globe className="h-3 w-3" />
+              {node.derived.ipAddress ?? "Unknown IP"}
+            </Badge>
+            <Badge variant="outline" className="gap-1.5">
+              {node.pod?.isPublic ? "Public" : "Private"}
+            </Badge>
+          </div>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Code className="h-4 w-4" />
+                View Raw JSON
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle>Raw JSON Data</DialogTitle>
+              </DialogHeader>
+              <Separator className="flex-shrink-0" />
+              <div className="relative flex-1 min-h-0 overflow-hidden">
+                <div className="absolute top-2 right-2 z-10">
+                  <CopyButton
+                    value={JSON.stringify(node.raw, null, 2)}
+                    label="Copy JSON"
+                    variant="outline"
+                    size="sm"
+                  />
+                </div>
+                <pre className="p-4 overflow-auto text-sm font-mono bg-muted/30 rounded-lg h-full w-full">
+                  {JSON.stringify(node.raw, null, 2)}
+                </pre>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </>

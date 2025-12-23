@@ -22,9 +22,9 @@ export function EndpointDistributionChart({
 	return (
 		<div className="space-y-4">
 			<p className="text-sm text-muted-foreground">
-				Number of advertised endpoints per pNode (out of 10 possible)
+				Number of advertised endpoints per pNode (gossip and pRPC)
 			</p>
-			<ChartContainer config={endpointConfig} className="h-[300px]">
+			<ChartContainer config={endpointConfig} className="h-[240px] sm:h-[280px] lg:h-[300px] w-full">
 				<BarChart data={endpointData} accessibilityLayer>
 					<CartesianGrid vertical={false} />
 					<XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />

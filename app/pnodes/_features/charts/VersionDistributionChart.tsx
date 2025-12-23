@@ -28,7 +28,7 @@ export function VersionDistributionChart({
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
 				<p className="text-sm text-muted-foreground">
-					Software version distribution across {rows.length} pNodes
+					Software version distribution across {rows.length} pNodes. Network health depends on nodes running compatible versions.
 				</p>
 				{modalVersion && (
 					<Badge variant="outline" className="gap-1.5">
@@ -38,7 +38,7 @@ export function VersionDistributionChart({
 			</div>
 			<ChartContainer
 				config={versionConfig}
-				className="mx-auto aspect-square max-h-[300px]"
+				className="mx-auto aspect-square max-h-[240px] sm:max-h-[280px] lg:max-h-[300px] w-full"
 			>
 				<PieChart>
 					<ChartTooltip

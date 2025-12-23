@@ -1,7 +1,7 @@
 import { PnodeRow } from "@/lib/pnodes/model";
 import { CopyButton } from "@/components/shared/CopyButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, Network, Radio, Server, ExternalLink } from "lucide-react";
+import { Network, Radio, ExternalLink } from "lucide-react";
 
 interface PnodeDetailEndpointsProps {
   node: PnodeRow;
@@ -9,33 +9,33 @@ interface PnodeDetailEndpointsProps {
 
 export function PnodeDetailEndpoints({ node }: PnodeDetailEndpointsProps) {
   const endpoints = [
-    { name: "Gossip", value: node.endpoints.gossip, icon: Network },
-    { name: "RPC", value: node.endpoints.rpc, icon: Radio },
-    { name: "Pubsub", value: node.endpoints.pubsub, icon: Globe },
-    { name: "TPU", value: node.endpoints.tpu, icon: Server },
-    { name: "TPU Forwards", value: node.endpoints.tpuForwards, icon: Server },
-    { name: "TPU QUIC", value: node.endpoints.tpuQuic, icon: Server },
-    { name: "TPU Forwards QUIC", value: node.endpoints.tpuForwardsQuic, icon: Server },
-    { name: "TPU Vote", value: node.endpoints.tpuVote, icon: Server },
-    { name: "TVU", value: node.endpoints.tvu, icon: Server },
-    { name: "Serve Repair", value: node.endpoints.serveRepair, icon: Server },
+    { name: "Gossip", value: node.endpoints.gossip, icon: Network, description: "Node address" },
+    { name: "pRPC", value: node.endpoints.rpc, icon: Radio, description: "pRPC endpoint (host:port)" },
   ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Network Endpoints</CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          pNodes expose a simplified endpoint structure compared to Solana validators
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {endpoints.map(({ name, value, icon: Icon }) => (
+          {endpoints.map(({ name, value, icon: Icon, description }) => (
             <div
               key={name}
               className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
             >
               <div className="flex items-center gap-3">
                 <Icon className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{name}</span>
+                <div>
+                  <span className="font-medium">{name}</span>
+                  {description && (
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  )}
+                </div>
               </div>
               {value ? (
                 <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export function PnodeDetailEndpoints({ node }: PnodeDetailEndpointsProps) {
                     {value}
                   </code>
                   <CopyButton value={value} label={`Copy ${name}`} />
-                  {name === "RPC" && (
+                  {name === "pRPC" && (
                     <a
                       href={`http://${value}`}
                       target="_blank"

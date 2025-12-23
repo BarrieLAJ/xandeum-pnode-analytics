@@ -41,7 +41,7 @@ export function LatencyDistributionChart({
 			</p>
 
 			{latencyData && (
-				<ChartContainer config={latencyConfig} className="h-[250px]">
+				<ChartContainer config={latencyConfig} className="h-[200px] sm:h-[230px] lg:h-[250px] w-full">
 					<BarChart data={latencyData} accessibilityLayer>
 						<CartesianGrid vertical={false} />
 						<XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />

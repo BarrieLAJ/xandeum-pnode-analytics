@@ -44,13 +44,13 @@ export function PerformanceCharts({
 							<PieChartIcon className="h-3.5 w-3.5" />
 							<span className="hidden sm:inline">Versions</span>
 						</TabsTrigger>
-						<TabsTrigger value="endpoints" className="gap-1.5">
-							<BarChart3 className="h-3.5 w-3.5" />
-							<span className="hidden sm:inline">Endpoints</span>
-						</TabsTrigger>
 						<TabsTrigger value="rpc" className="gap-1.5">
 							<Activity className="h-3.5 w-3.5" />
 							<span className="hidden sm:inline">RPC</span>
+						</TabsTrigger>
+						<TabsTrigger value="endpoints" className="gap-1.5">
+							<BarChart3 className="h-3.5 w-3.5" />
+							<span className="hidden sm:inline">Endpoints</span>
 						</TabsTrigger>
 						<TabsTrigger value="latency" className="gap-1.5" disabled={!hasProbeData}>
 							<Zap className="h-3.5 w-3.5" />
@@ -62,12 +62,12 @@ export function PerformanceCharts({
 						<VersionDistributionChart rows={rows} modalVersion={modalVersion} />
 					</TabsContent>
 
-					<TabsContent value="endpoints">
-						<EndpointDistributionChart rows={rows} />
-					</TabsContent>
-
 					<TabsContent value="rpc">
 						<RpcDistributionChart rows={rows} />
+					</TabsContent>
+
+					<TabsContent value="endpoints">
+						<EndpointDistributionChart rows={rows} />
 					</TabsContent>
 
 					<TabsContent value="latency">

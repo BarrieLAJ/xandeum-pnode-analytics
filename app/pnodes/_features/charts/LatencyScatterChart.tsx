@@ -24,7 +24,7 @@ export function LatencyScatterChart({ rows }: LatencyScatterChartProps) {
 			<p className="text-sm text-muted-foreground mt-6">
 				Latency vs Endpoint Count
 			</p>
-			<ChartContainer config={scatterConfig} className="h-[250px]">
+			<ChartContainer config={scatterConfig} className="h-[200px] sm:h-[230px] lg:h-[250px] w-full">
 				<ScatterChart accessibilityLayer>
 					<CartesianGrid />
 					<XAxis

@@ -16,7 +16,6 @@ interface PnodeDirectoryProps {
 
 export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 	const [snapshot] = useState(initialSnapshot);
-	const [showCharts, setShowCharts] = useState(false);
 
 	// Watchlist hook
 	const {
@@ -45,31 +44,32 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 			<PnodeDirectoryHeader
 				sourceMethod={snapshot.source.method}
 				watchlistCount={watchlistCount}
-				showCharts={showCharts}
-				onToggleCharts={() => setShowCharts(!showCharts)}
 			/>
 
-			{/* Performance Charts */}
-			{showCharts && (
-				<div className="space-y-6">
+			{/* Main Content: Table (left) and Charts (right) */}
+			<div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6">
+				{/* Table - Left side on desktop, top on mobile */}
+				<div className="min-w-0">
+					<PnodeTable
+						rows={snapshot.rows}
+						modalVersion={snapshot.stats.modalVersion}
+						versions={versions}
+						showProbeColumn={false}
+						watchlist={watchlist}
+						onToggleWatchlist={toggleWatchlist}
+						showWatchlistFilter={true}
+					/>
+				</div>
+
+				{/* Charts - Right side on desktop, bottom on mobile */}
+				<div className="space-y-6 min-w-0">
 					<PerformanceCharts
 						rows={snapshot.rows}
 						modalVersion={snapshot.stats.modalVersion}
 					/>
 					<NetworkHistoryCard />
 				</div>
-			)}
-
-			{/* Table */}
-			<PnodeTable
-				rows={snapshot.rows}
-				modalVersion={snapshot.stats.modalVersion}
-				versions={versions}
-				showProbeColumn={false}
-				watchlist={watchlist}
-				onToggleWatchlist={toggleWatchlist}
-				showWatchlistFilter={true}
-			/>
+			</div>
 		</div>
 	);
 }

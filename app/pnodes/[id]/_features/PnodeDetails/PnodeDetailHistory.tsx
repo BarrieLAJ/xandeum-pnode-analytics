@@ -84,7 +84,7 @@ export function PnodeDetailHistory({ pubkey }: PnodeDetailHistoryProps) {
                 History unavailable: {podHistory.error.message}
               </div>
             ) : (
-              <ChartContainer config={storageConfig} className="h-[260px]">
+              <ChartContainer config={storageConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
                 <LineChart data={storagePoints} accessibilityLayer>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="ts" hide />
@@ -133,7 +133,7 @@ export function PnodeDetailHistory({ pubkey }: PnodeDetailHistoryProps) {
                 No CPU samples yet. (We’ll start recording samples when you view a node’s live stats, or via an optional poller.)
               </div>
             ) : (
-              <ChartContainer config={cpuConfig} className="h-[260px]">
+              <ChartContainer config={cpuConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
                 <LineChart data={cpuPoints} accessibilityLayer>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="ts" hide />

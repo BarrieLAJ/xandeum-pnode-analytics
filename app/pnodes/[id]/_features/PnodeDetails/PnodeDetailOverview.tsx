@@ -1,15 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, Database, Timer, Globe, Coins } from "lucide-react";
-import { PnodeDetailNetworkContext } from "./PnodeDetailNetworkContext";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database, Timer, Coins, Cpu, MemoryStick, Network, Radio } from "lucide-react";
 import { PnodeDetailSystemStats } from "./PnodeDetailSystemStats";
-import { formatBytes, formatDurationSeconds, truncateVersion } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { formatBytes, formatDurationSeconds, formatDate } from "@/lib/utils";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { useQuery } from "@/lib/query/client";
+import { getPodStatsHistory } from "@/app/pnodes/_features/api";
+
+type Range = "24h" | "7d" | "30d";
 
 interface PnodeDetailOverviewProps {
   node: PnodeRow;
@@ -20,41 +23,70 @@ export function PnodeDetailOverview({
   node,
   snapshot,
 }: PnodeDetailOverviewProps) {
+  const [range, setRange] = useState<Range>("24h");
+
+  const statsHistory = useQuery({
+    queryKey: ["history", "podStats", node.pubkey, range],
+    queryFn: () => getPodStatsHistory(node.pubkey, range),
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const cpuPoints = (statsHistory.data?.points ?? [])
+    .map((p) => ({
+      ts: new Date(p.ts).toLocaleString(),
+      cpu: p.cpuPercent ?? null,
+    }))
+    .reverse();
+
+  const ramPoints = (statsHistory.data?.points ?? [])
+    .map((p) => ({
+      ts: new Date(p.ts).toLocaleString(),
+      ramUsed: p.ramUsedBytes ?? null,
+      ramTotal: p.ramTotalBytes ?? null,
+      ramPercent: p.ramTotalBytes && p.ramUsedBytes
+        ? (p.ramUsedBytes / p.ramTotalBytes) * 100
+        : null,
+    }))
+    .reverse();
+
+  const networkPoints = (statsHistory.data?.points ?? [])
+    .map((p) => ({
+      ts: new Date(p.ts).toLocaleString(),
+      packetsReceived: p.packetsReceived ?? null,
+      packetsSent: p.packetsSent ?? null,
+    }))
+    .reverse();
+
+  const streamsPoints = (statsHistory.data?.points ?? [])
+    .map((p) => ({
+      ts: new Date(p.ts).toLocaleString(),
+      activeStreams: p.activeStreams ?? null,
+    }))
+    .reverse();
+
+  const cpuConfig = {
+    cpu: { label: "CPU %", color: "var(--chart-1)" },
+  } as const;
+
+  const ramConfig = {
+    ramPercent: { label: "RAM %", color: "var(--chart-2)" },
+    ramUsed: { label: "RAM Used", color: "var(--chart-3)" },
+  } as const;
+
+  const networkConfig = {
+    packetsReceived: { label: "Packets Received", color: "var(--chart-1)" },
+    packetsSent: { label: "Packets Sent", color: "var(--chart-2)" },
+  } as const;
+
+  const streamsConfig = {
+    activeStreams: { label: "Active Streams", color: "var(--chart-3)" },
+  } as const;
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <GitBranch className="h-4 w-4" />
-              Software Version
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="text-2xl font-bold font-mono cursor-help">
-                    {node.version ? truncateVersion(node.version, 15) : "Unknown"}
-                  </p>
-                </TooltipTrigger>
-                {node.version && (
-                  <TooltipContent>
-                    <p>Full version: {node.version}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-            {snapshot.stats.modalVersion && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {node.version === snapshot.stats.modalVersion
-                  ? "Running the most common version"
-                  : `Modal version: ${truncateVersion(snapshot.stats.modalVersion, 15)}`}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -76,7 +108,7 @@ export function PnodeDetailOverview({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Timer className="h-4 w-4" />
-              Uptime / Last seen
+              Uptime
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -85,27 +117,8 @@ export function PnodeDetailOverview({
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {node.pod?.lastSeenTimestamp
-                ? `Last seen: ${new Date(
-                    node.pod.lastSeenTimestamp * 1000
-                  ).toLocaleString()}`
+                ? `Last seen: ${formatDate(node.pod.lastSeenTimestamp * 1000)}`
                 : "Last seen: —"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              Public
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold font-mono">
-              {node.pod?.isPublic ? "Yes" : "No"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              pRPC: {node.pod?.prpcUrl ?? "—"}
             </p>
           </CardContent>
         </Card>
@@ -135,7 +148,229 @@ export function PnodeDetailOverview({
       {/* Live (on-demand) pRPC stats */}
       <PnodeDetailSystemStats pubkey={node.pubkey} />
 
-      <PnodeDetailNetworkContext snapshot={snapshot} />
+      {/* CPU and RAM Usage Graphs */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">System Resource Usage</h2>
+          <Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
+            <TabsList>
+              <TabsTrigger value="24h">24h</TabsTrigger>
+              <TabsTrigger value="7d">7d</TabsTrigger>
+              <TabsTrigger value="30d">30d</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Cpu className="h-4 w-4" />
+                CPU Usage Over Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsHistory.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading…</div>
+              ) : statsHistory.error ? (
+                <div className="text-sm text-muted-foreground">
+                  CPU history unavailable: {statsHistory.error.message}
+                </div>
+              ) : cpuPoints.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No CPU samples yet. Stats will be recorded when you view this node's live stats.
+                </div>
+              ) : (
+                <ChartContainer config={cpuConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                  <AreaChart data={cpuPoints} accessibilityLayer>
+                    <defs>
+                      <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-cpu)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-cpu)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="ts" hide />
+                    <YAxis tickLine={false} axisLine={false} unit="%" />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="cpu"
+                      stroke="var(--color-cpu)"
+                      fill="url(#cpuGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <MemoryStick className="h-4 w-4" />
+                RAM Usage Over Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsHistory.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading…</div>
+              ) : statsHistory.error ? (
+                <div className="text-sm text-muted-foreground">
+                  RAM history unavailable: {statsHistory.error.message}
+                </div>
+              ) : ramPoints.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No RAM samples yet. Stats will be recorded when you view this node's live stats.
+                </div>
+              ) : (
+                <ChartContainer config={ramConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                  <AreaChart data={ramPoints} accessibilityLayer>
+                    <defs>
+                      <linearGradient id="ramGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-ramPercent)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-ramPercent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="ts" hide />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => `${v.toFixed(1)}%`}
+                    />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="ramPercent"
+                      stroke="var(--color-ramPercent)"
+                      fill="url(#ramGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Network Activity Charts */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Network Activity</h2>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Network className="h-4 w-4" />
+                Network Packets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsHistory.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading…</div>
+              ) : statsHistory.error ? (
+                <div className="text-sm text-muted-foreground">
+                  Network history unavailable: {statsHistory.error.message}
+                </div>
+              ) : networkPoints.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No network data yet. Stats will be recorded when you view this node's live stats.
+                </div>
+              ) : (
+                <ChartContainer config={networkConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                  <AreaChart data={networkPoints} accessibilityLayer>
+                    <defs>
+                      <linearGradient id="packetsReceivedGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-packetsReceived)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-packetsReceived)" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="packetsSentGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-packetsSent)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-packetsSent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="ts" hide />
+                    <YAxis tickLine={false} axisLine={false} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="packetsReceived"
+                      stroke="var(--color-packetsReceived)"
+                      fill="url(#packetsReceivedGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="packetsSent"
+                      stroke="var(--color-packetsSent)"
+                      fill="url(#packetsSentGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Radio className="h-4 w-4" />
+                Active Streams
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsHistory.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading…</div>
+              ) : statsHistory.error ? (
+                <div className="text-sm text-muted-foreground">
+                  Streams history unavailable: {statsHistory.error.message}
+                </div>
+              ) : streamsPoints.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No streams data yet. Stats will be recorded when you view this node's live stats.
+                </div>
+              ) : (
+                <ChartContainer config={streamsConfig} className="h-[200px] sm:h-[240px] lg:h-[260px] w-full">
+                  <AreaChart data={streamsPoints} accessibilityLayer>
+                    <defs>
+                      <linearGradient id="streamsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-activeStreams)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--color-activeStreams)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="ts" hide />
+                    <YAxis tickLine={false} axisLine={false} />
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="activeStreams"
+                      stroke="var(--color-activeStreams)"
+                      fill="url(#streamsGradient)"
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

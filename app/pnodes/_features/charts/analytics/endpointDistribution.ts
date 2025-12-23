@@ -34,7 +34,7 @@ export function calculateEndpointDistribution(
 
   const data = Object.entries(distribution)
     .map(([count, value]) => ({
-      name: `${count}/10`,
+      name: `${count} endpoint${parseInt(count) !== 1 ? 's' : ''}`,
       endpoints: parseInt(count),
       count: value,
     }))

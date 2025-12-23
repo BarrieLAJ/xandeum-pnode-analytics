@@ -29,7 +29,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen bg-background gradient-mesh">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[160rem] px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
@@ -125,13 +125,13 @@ export function AppShell({ children }: AppShellProps) {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto max-w-[160rem] px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border/50 mt-auto">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mx-auto max-w-[160rem] px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
             <p>
               Built for the{" "}
