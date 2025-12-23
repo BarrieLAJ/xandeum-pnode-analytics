@@ -14,6 +14,7 @@ import {
 	PnodeTableToolbar,
 	PnodeTableHeader,
 	PnodeTableRow,
+	PnodeTablePagination,
 	usePnodeTableFilters,
 } from "./table";
 
@@ -22,12 +23,12 @@ interface PnodeTableProps {
 	modalVersion: string | null;
 	versions: string[];
 	className?: string;
-	showProbeColumn?: boolean;
 	probing?: boolean;
 	onProbe?: () => void;
 	watchlist?: string[];
 	onToggleWatchlist?: (pubkey: string) => boolean | void;
 	showWatchlistFilter?: boolean;
+	containerHeight?: number | null;
 }
 
 export function PnodeTable({
@@ -35,12 +36,12 @@ export function PnodeTable({
 	modalVersion,
 	versions,
 	className,
-	showProbeColumn = false,
 	probing = false,
 	onProbe,
 	watchlist = [],
 	onToggleWatchlist,
 	showWatchlistFilter = false,
+	containerHeight,
 }: PnodeTableProps) {
 	const {
 		search,
@@ -52,11 +53,18 @@ export function PnodeTable({
 		watchlistFilter,
 		setWatchlistFilter,
 		sortField,
-		sortOrder,
 		toggleSort,
 		filteredRows,
+		paginatedRows,
 		clearFilters,
 		hasActiveFilters,
+		currentPage,
+		totalPages,
+		startIndex,
+		endIndex,
+		goToPage,
+		nextPage,
+		previousPage,
 	} = usePnodeTableFilters({ rows, watchlist });
 
 	const handleExport = useCallback(() => {
@@ -66,43 +74,45 @@ export function PnodeTable({
 	}, [filteredRows]);
 
 	return (
-		<div className={cn("space-y-4", className)}>
-			<PnodeTableFilters
-				search={search}
-				onSearchChange={setSearch}
-				versionFilter={versionFilter}
-				onVersionFilterChange={setVersionFilter}
-				rpcFilter={rpcFilter}
-				onRpcFilterChange={setRpcFilter}
-				watchlistFilter={watchlistFilter}
-				onWatchlistFilterChange={setWatchlistFilter}
-				versions={versions}
-				watchlistCount={watchlist.length}
-				showWatchlistFilter={showWatchlistFilter}
-			/>
+		<div className={cn("flex flex-col h-full min-h-0 space-y-4", className)}>
+			{/* Filters - Fixed at top, always visible */}
+			<div className="shrink-0">
+				<PnodeTableFilters
+					search={search}
+					onSearchChange={setSearch}
+					versionFilter={versionFilter}
+					onVersionFilterChange={setVersionFilter}
+					rpcFilter={rpcFilter}
+					onRpcFilterChange={setRpcFilter}
+					watchlistFilter={watchlistFilter}
+					onWatchlistFilterChange={setWatchlistFilter}
+					versions={versions}
+					watchlistCount={watchlist.length}
+					showWatchlistFilter={showWatchlistFilter}
+				/>
+			</div>
 
-			<PnodeTableToolbar
-				filteredCount={filteredRows.length}
-				totalCount={rows.length}
-				hasActiveFilters={hasActiveFilters}
-				onClearFilters={clearFilters}
-				onProbe={onProbe}
-				probing={probing}
-				onExport={handleExport}
-			/>
+			{/* Toolbar - Fixed below filters, always visible */}
+			<div className="shrink-0">
+				<PnodeTableToolbar
+					filteredCount={filteredRows.length}
+					totalCount={rows.length}
+					hasActiveFilters={hasActiveFilters}
+					onClearFilters={clearFilters}
+					onProbe={onProbe}
+					probing={probing}
+					onExport={handleExport}
+				/>
+			</div>
 
-			{/* Table */}
-			<div className="rounded-lg border border-border/50 bg-card overflow-hidden">
-				<div className="overflow-x-auto scrollbar-thin">
+			{/* Table container - Fills remaining space, only table body scrolls */}
+			<div className="flex-1 flex flex-col min-h-0 rounded-lg border border-border/50 bg-card overflow-hidden">
+				{/* Table with sticky header - Scrollable body */}
+				<div className="flex-1 overflow-auto scrollbar-thin min-h-0">
 					<Table>
-						<PnodeTableHeader
-							sortField={sortField}
-							sortOrder={sortOrder}
-							onSort={toggleSort}
-							showProbeColumn={showProbeColumn}
-						/>
+						<PnodeTableHeader sortField={sortField} onSort={toggleSort} />
 						<TableBody>
-							{filteredRows.length === 0 ? (
+							{paginatedRows.length === 0 ? (
 								<TableRow>
 									<TableCell
 										colSpan={8}
@@ -112,12 +122,11 @@ export function PnodeTable({
 									</TableCell>
 								</TableRow>
 							) : (
-								filteredRows.map((row) => (
+								paginatedRows.map((row) => (
 									<PnodeTableRow
 										key={row.pubkey}
 										row={row}
 										modalVersion={modalVersion}
-										showProbeColumn={showProbeColumn}
 										isWatched={watchlist.includes(row.pubkey)}
 										onToggleWatchlist={onToggleWatchlist}
 									/>
@@ -125,6 +134,19 @@ export function PnodeTable({
 							)}
 						</TableBody>
 					</Table>
+				</div>
+				{/* Pagination - Fixed at bottom, always visible */}
+				<div className="shrink-0 border-t bg-card">
+					<PnodeTablePagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						startIndex={startIndex}
+						endIndex={endIndex}
+						totalItems={filteredRows.length}
+						onPageChange={goToPage}
+						onPrevious={previousPage}
+						onNext={nextPage}
+					/>
 				</div>
 			</div>
 		</div>

@@ -4,8 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 
 interface PnodeDirectoryHeaderProps {
-	/** Source method from snapshot */
-	sourceMethod: string;
 	/** Number of watched nodes */
 	watchlistCount: number;
 }
@@ -14,7 +12,6 @@ interface PnodeDirectoryHeaderProps {
  * Page header with title, description, and status badges
  */
 export function PnodeDirectoryHeader({
-	sourceMethod,
 	watchlistCount,
 }: PnodeDirectoryHeaderProps) {
 	return (
@@ -29,9 +26,6 @@ export function PnodeDirectoryHeader({
 				<Badge variant="outline" className="gap-1.5">
 					<span className="h-2 w-2 rounded-full bg-chart-2 animate-pulse" />
 					Live
-				</Badge>
-				<Badge variant="secondary" className="font-mono text-xs">
-					{sourceMethod}
 				</Badge>
 				{watchlistCount > 0 && (
 					<Badge
