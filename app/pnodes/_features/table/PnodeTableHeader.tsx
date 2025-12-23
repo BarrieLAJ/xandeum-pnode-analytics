@@ -9,7 +9,8 @@ type SortField =
   | "pubkey"
   | "version"
   | "public"
-  | "storageUsed";
+  | "storageUsed"
+  | "credits";
 
 interface PnodeTableHeaderProps {
   sortField: SortField;
@@ -88,6 +89,15 @@ export function PnodeTableHeader({
             onSort={onSort}
           >
             Storage
+          </SortableHeader>
+        </TableHead>
+        <TableHead>
+          <SortableHeader
+            field="credits"
+            currentField={sortField}
+            onSort={onSort}
+          >
+            Credits
           </SortableHeader>
         </TableHead>
         <TableHead className="text-right w-[100px]">Actions</TableHead>

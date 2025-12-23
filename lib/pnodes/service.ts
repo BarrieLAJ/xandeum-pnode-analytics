@@ -15,6 +15,7 @@ import {
 	podWithStatsToPnodeRow,
 	computeStats,
 } from "./model";
+import { fetchPodCredits } from "./credits";
 
 const SNAPSHOT_CACHE_KEY = "pnodes:snapshot";
 const NODE_CACHE_PREFIX = "pnode:";
@@ -125,11 +126,37 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 	}
 
 	try {
-		// Fetch fresh data
-		const { pods, durationMs, errors } = await fetchPodsWithStats();
+		// Fetch fresh data (parallel fetch for pods and credits)
+		// Credits are optional - if the API fails, we continue without credits
+		const [{ pods, durationMs, errors }, creditsMap] = await Promise.allSettled([
+			fetchPodsWithStats(),
+			fetchPodCredits(),
+		]).then((results) => {
+			// Handle pods result
+			const podsResult = results[0];
+			if (podsResult.status === "rejected") {
+				throw podsResult.reason;
+			}
+			
+			// Handle credits result (optional - use empty map if failed)
+			const creditsResult = results[1];
+			const creditsMap = creditsResult.status === "fulfilled" 
+				? creditsResult.value 
+				: new Map<string, number>();
+			
+			return [podsResult.value, creditsMap] as const;
+		});
 
-		// Transform to canonical rows
-		const rows: PnodeRow[] = pods.map(podWithStatsToPnodeRow);
+		// Transform to canonical rows and merge credits
+		const rows: PnodeRow[] = pods.map((pod) => {
+			const row = podWithStatsToPnodeRow(pod);
+			// Merge credits if available
+			if (row.pod) {
+				const credits = creditsMap.get(pod.pubkey);
+				row.pod.credits = credits !== undefined ? credits : null;
+			}
+			return row;
+		});
 
 		// Compute stats
 		const stats: SnapshotStats = computeStats(rows);

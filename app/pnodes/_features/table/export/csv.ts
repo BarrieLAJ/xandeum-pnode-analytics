@@ -37,6 +37,7 @@ export function pnodesToCSV(rows: PnodeRow[]): string {
 		"Storage Committed (bytes)",
 		"Storage Used (bytes)",
 		"Storage Usage (%)",
+		"Credits",
 		"pRPC URL",
 	];
 
@@ -54,6 +55,7 @@ export function pnodesToCSV(rows: PnodeRow[]): string {
 			row.pod?.storageCommittedBytes ?? "",
 			row.pod?.storageUsedBytes ?? "",
 			row.pod?.storageUsagePercent ?? "",
+			row.pod?.credits ?? "",
 			row.pod?.prpcUrl ?? "",
 		];
 

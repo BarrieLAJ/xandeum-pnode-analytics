@@ -71,6 +71,7 @@ export interface PnodeRow {
 		storageCommittedBytes: number;
 		storageUsedBytes: number;
 		storageUsagePercent: number;
+		credits?: number | null;
 	};
 	/** All available endpoints */
 	endpoints: PnodeEndpoints;

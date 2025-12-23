@@ -161,33 +161,43 @@ export function parsePodsWithStatsResult(
 }
 
 /**
- * Schema for `get stats` (pNode pRPC) result.
+ * Schema for `get-stats` (pNode pRPC) result.
+ *
+ * Actual response structure (flat, not nested):
+ * {
+ *   "file_size": 140000000000,
+ *   "active_streams": 2,
+ *   "cpu_percent": 0.4926108419895172,
+ *   "current_index": 4,
+ *   "last_updated": 1766400915,
+ *   "packets_received": 9790967,
+ *   "packets_sent": 10982855,
+ *   "ram_total": 12541509632,
+ *   "ram_used": 706211840,
+ *   "total_bytes": 49001,
+ *   "total_pages": 1,
+ *   "uptime": 302255
+ * }
  *
  * See: https://docs.xandeum.network/api/pnode-rpc-prpc-reference
  */
 export const PrpcGetStatsResultSchema = z
 	.object({
-		metadata: z
-			.object({
-				total_bytes: z.number().optional(),
-				total_pages: z.number().optional(),
-				last_updated: z.number().optional(),
-			})
-			.optional(),
-		stats: z
-			.object({
-				cpu_percent: z.number().optional(),
-				ram_used: z.number().optional(),
-				ram_total: z.number().optional(),
-				uptime: z.number().optional(),
-				packets_received: z.number().optional(),
-				packets_sent: z.number().optional(),
-				active_streams: z.number().optional(),
-			})
-			.optional(),
+		// All fields are at the top level (flat structure)
 		file_size: z.number().optional(),
+		active_streams: z.number().optional(),
+		cpu_percent: z.number().optional(),
+		current_index: z.number().optional(),
+		last_updated: z.number().optional(),
+		packets_received: z.number().optional(),
+		packets_sent: z.number().optional(),
+		ram_total: z.number().optional(),
+		ram_used: z.number().optional(),
+		total_bytes: z.number().optional(),
+		total_pages: z.number().optional(),
+		uptime: z.number().optional(),
 	})
-	.passthrough();
+	.passthrough(); // Allow additional fields we might not know about
 
 export type PrpcGetStatsResult = z.infer<typeof PrpcGetStatsResultSchema>;
 

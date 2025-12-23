@@ -61,7 +61,10 @@ async function postJson(urlString: string, body: string, timeoutMs: number): Pro
     );
 
     const timeoutId = setTimeout(() => {
-      req.destroy(new Error("Request timed out"));
+      // Abort the request cleanly on timeout
+      if (!req.destroyed) {
+        req.destroy(new Error("Request timed out"));
+      }
     }, timeoutMs);
 
     req.on("error", (err) => {
@@ -70,6 +73,13 @@ async function postJson(urlString: string, body: string, timeoutMs: number): Pro
     });
     req.on("close", () => {
       clearTimeout(timeoutId);
+    });
+    req.on("timeout", () => {
+      // Handle socket timeout (different from our manual timeout)
+      clearTimeout(timeoutId);
+      if (!req.destroyed) {
+        req.destroy(new Error("Socket timed out"));
+      }
     });
 
     req.write(body);

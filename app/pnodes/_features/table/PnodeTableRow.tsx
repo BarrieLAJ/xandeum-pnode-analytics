@@ -72,6 +72,15 @@ export function PnodeTableRow({
           )}
         </div>
       </TableCell>
+      <TableCell>
+        {row.pod?.credits !== undefined && row.pod.credits !== null ? (
+          <span className="font-mono text-sm">
+            {row.pod.credits.toLocaleString()}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-sm">—</span>
+        )}
+      </TableCell>
       <PnodeTableActionsCell row={row} />
     </TableRow>
   );

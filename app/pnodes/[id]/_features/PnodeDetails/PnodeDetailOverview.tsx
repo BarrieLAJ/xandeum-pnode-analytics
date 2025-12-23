@@ -1,6 +1,6 @@
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, Database, Timer, Globe } from "lucide-react";
+import { GitBranch, Database, Timer, Globe, Coins } from "lucide-react";
 import { PnodeDetailNetworkContext } from "./PnodeDetailNetworkContext";
 import { PnodeDetailSystemStats } from "./PnodeDetailSystemStats";
 import { formatBytes, formatDurationSeconds, truncateVersion } from "@/lib/utils";
@@ -22,7 +22,7 @@ export function PnodeDetailOverview({
 }: PnodeDetailOverviewProps) {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -106,6 +106,27 @@ export function PnodeDetailOverview({
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               pRPC: {node.pod?.prpcUrl ?? "—"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Coins className="h-4 w-4" />
+              Credits
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold font-mono">
+              {node.pod?.credits !== undefined && node.pod.credits !== null
+                ? node.pod.credits.toLocaleString()
+                : "—"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {node.pod?.credits !== undefined && node.pod.credits !== null
+                ? "Available credits"
+                : "Credits data unavailable"}
             </p>
           </CardContent>
         </Card>

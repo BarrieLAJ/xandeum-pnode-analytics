@@ -7,7 +7,8 @@ type SortField =
   | "pubkey"
   | "version"
   | "public"
-  | "storageUsed";
+  | "storageUsed"
+  | "credits";
 type SortOrder = "asc" | "desc";
 
 interface UsePnodeTableFiltersProps {
@@ -73,6 +74,14 @@ export function usePnodeTableFilters({ rows, watchlist }: UsePnodeTableFiltersPr
         case "storageUsed":
           comparison =
             (a.pod?.storageUsedBytes ?? 0) - (b.pod?.storageUsedBytes ?? 0);
+          break;
+        case "credits":
+          const aCredits = a.pod?.credits ?? null;
+          const bCredits = b.pod?.credits ?? null;
+          if (aCredits === null && bCredits === null) comparison = 0;
+          else if (aCredits === null) comparison = 1; // nulls last
+          else if (bCredits === null) comparison = -1; // nulls last
+          else comparison = aCredits - bCredits;
           break;
       }
       return sortOrder === "asc" ? comparison : -comparison;

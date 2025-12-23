@@ -22,11 +22,12 @@ export function PnodeDetailSystemStats({ pubkey }: PnodeDetailSystemStatsProps) 
   });
 
   const stats = query.data?.stats;
-  const cpu = stats?.stats?.cpu_percent;
-  const ramUsed = stats?.stats?.ram_used;
-  const ramTotal = stats?.stats?.ram_total;
-  const uptime = stats?.stats?.uptime;
-  const activeStreams = stats?.stats?.active_streams;
+  // Stats are at the top level (flat structure), not nested
+  const cpu = stats?.cpu_percent;
+  const ramUsed = stats?.ram_used;
+  const ramTotal = stats?.ram_total;
+  const uptime = stats?.uptime;
+  const activeStreams = stats?.active_streams;
 
   return (
     <Card>
