@@ -35,8 +35,7 @@ export default function AboutPage() {
           </h1>
         </div>
         <p className="text-lg text-muted-foreground">
-          This dashboard provides real-time analytics for Xandeum pNodes,
-          similar to how validator dashboards work for Solana.
+          A real-time dashboard for monitoring Xandeum pNodes, similar to validator dashboards for Solana.
         </p>
       </div>
 
@@ -50,14 +49,10 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent className="prose prose-sm dark:prose-invert max-w-none">
           <p>
-            <strong>Xandeum</strong> is building a scalable storage layer for
-            Solana dApps. Think of it as a second tier of Solana accounts that
-            can grow to exabytes and beyond.
+            <strong>Xandeum</strong> is building a scalable storage layer for Solana dApps. Think of it as a second tier of Solana accounts that can grow to exabytes and beyond.
           </p>
           <p>
-            This storage layer lives on its own network of storage provider
-            nodes, called <strong>pNodes</strong>. These nodes participate in the
-            gossip protocol to announce their availability and capabilities.
+            This storage layer runs on its own network of storage provider nodes, called <strong>pNodes</strong>. These nodes use the gossip protocol to announce their availability and capabilities.
           </p>
           <div className="flex gap-2 mt-4 not-prose">
             <Badge variant="outline" className="gap-1.5">
@@ -96,8 +91,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             <h4 className="font-semibold">pRPC Endpoint</h4>
             <p className="text-sm text-muted-foreground">
-              All data is fetched from the Xandeum devnet pRPC endpoint using
-              standard JSON-RPC 2.0 protocol (compatible with Solana tooling).
+              All data comes from the Xandeum devnet pRPC endpoint using standard JSON-RPC 2.0 (compatible with Solana tooling).
             </p>
             <div className="p-3 rounded-lg bg-muted/50 font-mono text-sm">
               <code>https://api.devnet.xandeum.com:8899/</code>
@@ -107,27 +101,18 @@ export default function AboutPage() {
           <Separator />
 
           <div className="space-y-4">
-            <h4 className="font-semibold">Discovery Method</h4>
+            <h4 className="font-semibold">How We Discover Nodes</h4>
             <p className="text-sm text-muted-foreground">
-              We use the <code className="px-1 py-0.5 rounded bg-muted">getClusterNodes</code> RPC method to retrieve all
-              pNodes currently participating in the gossip network.
+              We query multiple seed pNodes using the <code className="px-1 py-0.5 rounded bg-muted">get-pods-with-stats</code> method to discover all pNodes currently active in the gossip network. This gives us comprehensive data about each node's status, capabilities, and metrics.
             </p>
-            <div className="p-4 rounded-lg bg-muted/30 font-mono text-xs overflow-x-auto">
-              <pre>{`{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "getClusterNodes",
-  "params": []
-}`}</pre>
-            </div>
           </div>
 
           <Separator />
 
           <div className="space-y-4">
-            <h4 className="font-semibold">Response Data</h4>
+            <h4 className="font-semibold">What Data We Get</h4>
             <p className="text-sm text-muted-foreground">
-              Each pNode in the response includes the following information:
+              Each pNode includes:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div className="flex items-start gap-2">
@@ -154,10 +139,26 @@ export default function AboutPage() {
                 </div>
               </div>
               <div className="flex items-start gap-2">
+                <Database className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium">storage stats</p>
+                  <p className="text-muted-foreground">
+                    Used and committed storage
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
                 <Code className="h-4 w-4 text-primary mt-0.5" />
                 <div>
-                  <p className="font-medium">featureSet</p>
-                  <p className="text-muted-foreground">Enabled features hash</p>
+                  <p className="font-medium">system metrics</p>
+                  <p className="text-muted-foreground">CPU, RAM, network, streams</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Shield className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium">credits</p>
+                  <p className="text-muted-foreground">Node credits from Xandeum API</p>
                 </div>
               </div>
             </div>
@@ -175,14 +176,13 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            To provide a fast user experience while minimizing load on the pRPC
-            endpoint, we implement server-side caching:
+            We cache data to keep things fast and reduce load on the network:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg border border-border/50">
               <p className="font-medium mb-1">Snapshot Cache</p>
               <p className="text-sm text-muted-foreground">
-                Full pNode list cached for <strong>30 seconds</strong>
+                Full pNode list cached for <strong>30 seconds</strong> (configurable)
               </p>
             </div>
             <div className="p-4 rounded-lg border border-border/50">
@@ -191,10 +191,21 @@ export default function AboutPage() {
                 Individual node data cached for <strong>60 seconds</strong>
               </p>
             </div>
+            <div className="p-4 rounded-lg border border-border/50">
+              <p className="font-medium mb-1">Geo Lookup Cache</p>
+              <p className="text-sm text-muted-foreground">
+                IP geolocation results cached for <strong>24 hours</strong>
+              </p>
+            </div>
+            <div className="p-4 rounded-lg border border-border/50">
+              <p className="font-medium mb-1">Historical Data</p>
+              <p className="text-sm text-muted-foreground">
+                Optional database storage for tracking network trends over time
+              </p>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            If the pRPC endpoint is unreachable, the dashboard will display
-            cached data with a &ldquo;stale&rdquo; warning banner.
+            If the pRPC endpoint is unreachable, you'll see cached data with a warning. The dashboard queries multiple seed nodes in parallel for better reliability.
           </p>
         </CardContent>
       </Card>
@@ -212,37 +223,37 @@ export default function AboutPage() {
             <div className="border-b border-border pb-4">
               <p className="font-medium">Total pNodes</p>
               <p className="text-sm text-muted-foreground">
-                The count of unique pNodes discovered in the gossip network via
-                the getClusterNodes call.
+                The number of unique pNodes found in the gossip network across all seed nodes.
               </p>
             </div>
             <div className="border-b border-border pb-4">
-              <p className="font-medium">RPC Enabled</p>
+              <p className="font-medium">Public pNodes</p>
               <p className="text-sm text-muted-foreground">
-                Nodes that have an RPC endpoint advertised in their gossip data.
-                These can accept JSON-RPC requests.
+                Nodes that have a publicly reachable RPC endpoint and can accept JSON-RPC requests.
+              </p>
+            </div>
+            <div className="border-b border-border pb-4">
+              <p className="font-medium">Storage Committed</p>
+              <p className="text-sm text-muted-foreground">
+                Total storage capacity committed across all pNodes in the network.
+              </p>
+            </div>
+            <div className="border-b border-border pb-4">
+              <p className="font-medium">Average Uptime</p>
+              <p className="text-sm text-muted-foreground">
+                Average uptime across all pNodes, calculated from their reported uptime values.
               </p>
             </div>
             <div className="border-b border-border pb-4">
               <p className="font-medium">Version Distribution</p>
               <p className="text-sm text-muted-foreground">
-                Breakdown of software versions running across all pNodes. The
-                &ldquo;modal&rdquo; version is the most common one in the network.
-              </p>
-            </div>
-            <div className="border-b border-border pb-4">
-              <p className="font-medium">Endpoint Count</p>
-              <p className="text-sm text-muted-foreground">
-                Each pNode can advertise up to 10 endpoints (gossip, RPC,
-                pubsub, TPU, TPU QUIC, TPU forwards, TPU forwards QUIC, TPU
-                vote, TVU, serve repair).
+                Shows which software versions are running across all pNodes. The modal version is the most common one.
               </p>
             </div>
             <div>
-              <p className="font-medium">Shred Version</p>
+              <p className="font-medium">System Metrics</p>
               <p className="text-sm text-muted-foreground">
-                Protocol version identifier used for consensus. All nodes should
-                typically have the same shred version.
+                Individual node metrics including CPU usage, RAM consumption, network traffic, and active stream counts.
               </p>
             </div>
           </div>
