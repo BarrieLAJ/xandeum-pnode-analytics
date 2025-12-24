@@ -22,10 +22,23 @@ export const metadata: Metadata = {
     "Real-time analytics dashboard for Xandeum pNodes - monitor network health, node status, and performance metrics.",
   keywords: ["Xandeum", "pNode", "Solana", "analytics", "blockchain", "storage"],
   authors: [{ name: "Xandeum Analytics" }],
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
+  },
   openGraph: {
     title: "Xandeum pNode Analytics",
     description: "Real-time analytics dashboard for Xandeum pNodes",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Xandeum Logo",
+      },
+    ],
   },
 };
 

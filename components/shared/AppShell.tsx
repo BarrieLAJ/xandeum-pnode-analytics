@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Server, GitCompare, Info, ExternalLink } from "lucide-react";
@@ -22,20 +23,20 @@ export function AppShell({ children }: AppShellProps) {
 		<div className="min-h-screen bg-background gradient-mesh">
 			{/* Header */}
 			<header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-				<div className="mx-auto max-w-[160rem] px-4 sm:px-6 lg:px-8">
+				<div className="mx-auto max-w-640 px-4 sm:px-6 lg:px-8">
 					<div className="flex h-16 items-center justify-between">
 						{/* Logo */}
 						<Link href="/pnodes" className="flex items-center gap-3 group">
-							<div className="relative">
-								<div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-									<Server className="h-5 w-5 text-primary" />
-								</div>
-								<div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-chart-2 border-2 border-background animate-pulse" />
-							</div>
 							<div className="flex flex-col">
-								<span className="font-semibold text-foreground tracking-tight">
-									Xandeum
-								</span>
+								<div className="relative h-8 w-34 shrink-0">
+									<Image
+										src="/logo.png"
+										alt="Xandeum Logo"
+										fill
+										className="object-contain"
+										priority
+									/>
+								</div>
 								<span className="text-[10px] uppercase tracking-widest text-muted-foreground -mt-0.5">
 									pNode Analytics
 								</span>

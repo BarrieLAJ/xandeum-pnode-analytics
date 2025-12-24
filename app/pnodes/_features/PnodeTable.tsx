@@ -40,7 +40,6 @@ export function PnodeTable({
 	watchlist = [],
 	onToggleWatchlist,
 	showWatchlistFilter = false,
-	containerHeight,
 }: PnodeTableProps) {
 	const {
 		search,
