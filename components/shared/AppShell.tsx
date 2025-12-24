@@ -24,11 +24,14 @@ export function AppShell({ children }: AppShellProps) {
 			{/* Header */}
 			<header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
 				<div className="mx-auto max-w-640 px-4 sm:px-6 lg:px-8">
-					<div className="flex h-16 items-center justify-between">
+					<div className="flex h-14 sm:h-16 items-center justify-between gap-2 sm:gap-4">
 						{/* Logo */}
-						<Link href="/pnodes" className="flex items-center gap-3 group">
+						<Link
+							href="/pnodes"
+							className="flex items-center gap-2 sm:gap-3 group shrink-0"
+						>
 							<div className="flex flex-col">
-								<div className="relative h-8 w-34 shrink-0">
+								<div className="relative h-6 w-24 sm:h-8 sm:w-34 shrink-0">
 									<Image
 										src="/logo.png"
 										alt="Xandeum Logo"
@@ -37,14 +40,14 @@ export function AppShell({ children }: AppShellProps) {
 										priority
 									/>
 								</div>
-								<span className="text-[10px] uppercase tracking-widest text-muted-foreground -mt-0.5">
+								<span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground -mt-0.5">
 									pNode Analytics
 								</span>
 							</div>
 						</Link>
 
-						{/* Navigation */}
-						<nav className="hidden md:flex items-center gap-1">
+						{/* Navigation - Desktop */}
+						<nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
 							{navigation.map((item) => {
 								const isActive = pathname.startsWith(item.href);
 								return (
@@ -52,7 +55,7 @@ export function AppShell({ children }: AppShellProps) {
 										key={item.name}
 										href={item.href}
 										className={cn(
-											"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+											"flex items-center gap-2 px-3 xl:px-4 py-2 rounded-lg text-sm font-medium transition-all",
 											isActive
 												? "bg-primary/10 text-primary"
 												: "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -66,23 +69,23 @@ export function AppShell({ children }: AppShellProps) {
 						</nav>
 
 						{/* External links */}
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-1 sm:gap-2 shrink-0">
 							<a
 								href="https://xandeum.network"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+								className="hidden sm:flex items-center gap-1.5 px-2 xl:px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
 							>
-								Xandeum
+								<span className="hidden xl:inline">Xandeum</span>
 								<ExternalLink className="h-3 w-3" />
 							</a>
 							<a
 								href="https://discord.gg/uqRSmmM5m"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+								className="flex items-center gap-1.5 px-2 xl:px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
 							>
-								Discord
+								<span className="hidden sm:inline">Discord</span>
 								<ExternalLink className="h-3 w-3" />
 							</a>
 						</div>
@@ -90,7 +93,7 @@ export function AppShell({ children }: AppShellProps) {
 				</div>
 
 				{/* Mobile navigation */}
-				<nav className="md:hidden border-t border-border/50 px-4 py-2 flex gap-1 overflow-x-auto">
+				<nav className="lg:hidden border-t border-border/50 px-4 py-2 flex gap-1 overflow-x-auto scrollbar-hide">
 					{navigation.map((item) => {
 						const isActive = pathname.startsWith(item.href);
 						return (
@@ -98,7 +101,7 @@ export function AppShell({ children }: AppShellProps) {
 								key={item.name}
 								href={item.href}
 								className={cn(
-									"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all",
+									"flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all shrink-0",
 									isActive
 										? "bg-primary/10 text-primary"
 										: "text-muted-foreground hover:text-foreground"

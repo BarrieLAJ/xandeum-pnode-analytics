@@ -40,7 +40,7 @@ function VersionLegend({
 	const filteredPayload = payload.filter((item) => item.type !== "none");
 
 	return (
-		<div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+		<div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 pt-2">
 			{filteredPayload
 				.map((item, index) => {
 					// Get the corresponding version data by index
@@ -56,16 +56,16 @@ function VersionLegend({
 					return (
 						<div
 							key={item.value ?? item.name ?? index}
-							className="flex items-center gap-1.5 basis-1/4 justify-center"
+							className="flex items-center gap-1.5 min-w-0 flex-shrink-0"
 							title={fullVersion} // Show full version on hover
 						>
 							<div
-								className="h-2 w-2 shrink-0 rounded-[2px]"
+								className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
 								style={{
 									backgroundColor: item.color,
 								}}
 							/>
-							<span className="text-sm truncate max-w-[120px]">
+							<span className="text-xs sm:text-sm truncate max-w-[100px] sm:max-w-[120px]">
 								{truncatedVersion}
 							</span>
 						</div>
@@ -85,83 +85,88 @@ export function VersionDistributionChart({
 
 	return (
 		<div className="space-y-4">
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 				<p className="text-sm text-muted-foreground">
 					Software version distribution across {rows.length} pNodes. Network health
 					depends on nodes running compatible versions.
 				</p>
 				{modalVersion && (
-					<Badge variant="outline" className="gap-1.5">
+					<Badge variant="outline" className="gap-1.5 shrink-0">
 						Modal: {modalVersion}
 					</Badge>
 				)}
 			</div>
-			<ChartContainer
-				config={versionConfig}
-				className="mx-auto aspect-square max-h-[240px] sm:max-h-[280px] lg:max-h-[300px] w-full"
-			>
-				<PieChart>
-					<ChartTooltip
-						cursor={false}
-						content={
-							<ChartTooltipContent
-								formatter={(value, name, item) => (
-									<div className="flex flex-col gap-0.5">
-										<span className="font-medium">{item.payload.fullName}</span>
-										<span className="text-muted-foreground">
-											{value} nodes ({item.payload.percentage}%)
-										</span>
-									</div>
-								)}
-							/>
-						}
-					/>
-					<Pie
-						data={versionData}
-						dataKey="count"
-						nameKey="name"
-						cx="50%"
-						cy="50%"
-						outerRadius={100}
-						strokeWidth={2}
-					>
-						<Label
-							content={({ viewBox }) => {
-								if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-									return (
-										<text
-											x={viewBox.cx}
-											y={viewBox.cy}
-											textAnchor="middle"
-											dominantBaseline="middle"
-										>
-											<tspan
-												x={viewBox.cx}
-												y={viewBox.cy}
-												className="fill-foreground text-2xl font-bold"
-											>
-												{versionData.length}
-											</tspan>
-											<tspan
-												x={viewBox.cx}
-												y={(viewBox.cy || 0) + 20}
-												className="fill-muted-foreground text-xs"
-											>
-												versions
-											</tspan>
-										</text>
-									);
-								}
-							}}
+			<div className="flex flex-col items-center">
+				<ChartContainer
+					config={versionConfig}
+					className="mx-auto w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px]"
+					style={{ height: "280px" }}
+				>
+					<PieChart>
+						<ChartTooltip
+							cursor={false}
+							content={
+								<ChartTooltipContent
+									formatter={(value, name, item) => (
+										<div className="flex flex-col gap-0.5">
+											<span className="font-medium">{item.payload.fullName}</span>
+											<span className="text-muted-foreground">
+												{value} nodes ({item.payload.percentage}%)
+											</span>
+										</div>
+									)}
+								/>
+							}
 						/>
-					</Pie>
-					<ChartLegend
-						content={({ payload }) => (
-							<VersionLegend payload={payload} versionData={versionData} />
-						)}
-					/>
-				</PieChart>
-			</ChartContainer>
+						<Pie
+							data={versionData}
+							dataKey="count"
+							nameKey="name"
+							cx="50%"
+							cy="45%"
+							outerRadius="70%"
+							strokeWidth={2}
+						>
+							<Label
+								content={({ viewBox }) => {
+									if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+										return (
+											<text
+												x={viewBox.cx}
+												y={(viewBox.cy || 0) * 0.9}
+												textAnchor="middle"
+												dominantBaseline="middle"
+											>
+												<tspan
+													x={viewBox.cx}
+													y={(viewBox.cy || 0) * 0.9}
+													className="fill-foreground text-2xl font-bold"
+												>
+													{versionData.length}
+												</tspan>
+												<tspan
+													x={viewBox.cx}
+													y={(viewBox.cy || 0) * 0.9 + 20}
+													className="fill-muted-foreground text-xs"
+												>
+													versions
+												</tspan>
+											</text>
+										);
+									}
+								}}
+							/>
+						</Pie>
+						<ChartLegend
+							verticalAlign="bottom"
+							height={60}
+							content={({ payload }) => (
+								<VersionLegend payload={payload} versionData={versionData} />
+							)}
+						/>
+					</PieChart>
+				</ChartContainer>
+			</div>
 		</div>
 	);
 }
