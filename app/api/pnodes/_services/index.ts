@@ -12,3 +12,4 @@ export {
 
 export * from "./geo";
 
+export { collectStatsFromNodes } from "./collectStats";

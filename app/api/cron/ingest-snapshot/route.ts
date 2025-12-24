@@ -3,6 +3,7 @@ import { env } from "@/lib/config/env";
 import { getSnapshot } from "@/lib/pnodes/service";
 import { insertNetworkSnapshot, insertPodSnapshots } from "@/lib/db/queries";
 import { serverError } from "@/lib/api/errors";
+import { collectStatsFromNodes } from "../../pnodes/_services";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -65,11 +66,31 @@ export async function GET(request: Request) {
 			}))
 		);
 
+		// Collect stats from public nodes (async, don't block on errors)
+		let statsResult = {
+			collected: 0,
+			failed: 0,
+			skipped: 0,
+			errors: [] as string[],
+		};
+		try {
+			statsResult = await collectStatsFromNodes(snapshot.rows, now);
+			console.log(
+				`[Cron] Stats collection: ${statsResult.collected} collected, ${statsResult.failed} failed, ${statsResult.skipped} skipped`
+			);
+		} catch (error) {
+			console.error("[Cron] Error collecting stats:", error);
+			// Don't fail the entire cron job if stats collection fails
+		}
+
 		return NextResponse.json(
 			{
 				insertedAt: now.toISOString(),
 				podsInserted: snapshot.rows.length,
 				networkInserted: 1,
+				statsCollected: statsResult.collected,
+				statsFailed: statsResult.failed,
+				statsSkipped: statsResult.skipped,
 				source: snapshot.source,
 			},
 			{ status: 200 }
