@@ -105,3 +105,92 @@ export function truncateVersion(
 	if (version.length <= maxLength) return version;
 	return `${version.slice(0, maxLength)}...`;
 }
+
+/**
+ * Aggregate time-series data points based on time range.
+ * - 24h: Groups by hour (or every 2-3 hours if too dense)
+ * - 7d/30d: Groups by day
+ * 
+ * Uses average values for numeric fields, which is standard for analytics dashboards.
+ */
+export function aggregateTimeSeriesData<T extends Record<string, unknown>>(
+	data: T[],
+	range: "24h" | "7d" | "30d",
+	tsKey: keyof T = "ts" as keyof T
+): T[] {
+	if (data.length === 0) return [];
+
+	// Determine bucket size based on range
+	let bucketMs: number;
+	if (range === "24h") {
+		// For 24h, use 2-hour buckets (or 1-hour if we have < 12 points)
+		// This gives us 12 points max, which is readable
+		bucketMs = data.length > 12 ? 2 * 60 * 60 * 1000 : 60 * 60 * 1000;
+	} else {
+		// For 7d and 30d, use daily buckets
+		bucketMs = 24 * 60 * 60 * 1000;
+	}
+
+	// Group data points by time bucket
+	const buckets = new Map<string, T[]>();
+
+	for (const point of data) {
+		const tsValue = point[tsKey];
+		if (!tsValue) continue;
+
+		const date = tsValue instanceof Date ? tsValue : new Date(tsValue as string | number);
+		if (isNaN(date.getTime())) continue;
+
+		// Calculate bucket start time
+		const bucketTime = Math.floor(date.getTime() / bucketMs) * bucketMs;
+		const bucketKey = new Date(bucketTime).toISOString();
+
+		if (!buckets.has(bucketKey)) {
+			buckets.set(bucketKey, []);
+		}
+		buckets.get(bucketKey)!.push(point);
+	}
+
+	// Aggregate each bucket
+	const aggregated: T[] = [];
+
+	for (const [bucketKey, points] of buckets.entries()) {
+		if (points.length === 0) continue;
+
+		// Use the bucket start time as the timestamp
+		const aggregatedPoint = { ...points[0] };
+		aggregatedPoint[tsKey] = bucketKey as T[keyof T];
+
+		// Calculate averages for all numeric fields (except the timestamp)
+		for (const key in aggregatedPoint) {
+			if (key === tsKey) continue;
+
+			const values = points
+				.map((p) => p[key])
+				.filter((v) => v !== null && v !== undefined && typeof v === "number");
+
+			if (values.length > 0) {
+				const sum = (values as number[]).reduce((a, b) => a + b, 0);
+				(aggregatedPoint as Record<string, unknown>)[key] = sum / values.length;
+			} else {
+				// If all values are null/undefined, preserve null
+				const allNull = points.every((p) => p[key] === null || p[key] === undefined);
+				if (allNull) {
+					(aggregatedPoint as Record<string, unknown>)[key] = null;
+				}
+			}
+		}
+
+		aggregated.push(aggregatedPoint);
+	}
+
+	// Sort by timestamp (ascending)
+	return aggregated.sort((a, b) => {
+		const aTs = a[tsKey];
+		const bTs = b[tsKey];
+		if (!aTs || !bTs) return 0;
+		const aDate = aTs instanceof Date ? aTs : new Date(aTs as string | number);
+		const bDate = bTs instanceof Date ? bTs : new Date(bTs as string | number);
+		return aDate.getTime() - bDate.getTime();
+	});
+}

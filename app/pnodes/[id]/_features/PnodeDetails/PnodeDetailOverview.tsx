@@ -14,7 +14,12 @@ import {
 	Radio,
 } from "lucide-react";
 import { PnodeDetailSystemStats } from "./PnodeDetailSystemStats";
-import { formatBytes, formatDurationSeconds, formatDate } from "@/lib/utils";
+import {
+	formatBytes,
+	formatDurationSeconds,
+	formatDate,
+	aggregateTimeSeriesData,
+} from "@/lib/utils";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
 	ChartContainer,
@@ -31,10 +36,7 @@ interface PnodeDetailOverviewProps {
 	snapshot: SnapshotResponse;
 }
 
-export function PnodeDetailOverview({
-	node,
-	snapshot,
-}: PnodeDetailOverviewProps) {
+export function PnodeDetailOverview({ node }: PnodeDetailOverviewProps) {
 	const [range, setRange] = useState<Range>("24h");
 
 	const statsHistory = useQuery({
@@ -45,16 +47,26 @@ export function PnodeDetailOverview({
 		retry: 1,
 	});
 
-	const cpuPoints = (statsHistory.data?.points ?? [])
+	const normalizeTimestamp = (ts: unknown): string => {
+		if (ts instanceof Date) {
+			return ts.toISOString();
+		} else if (typeof ts === "string") {
+			return ts;
+		} else {
+			return new Date(ts as string | number).toISOString();
+		}
+	};
+
+	const rawCpuPoints = (statsHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			cpu: p.cpuPercent ?? null,
 		}))
 		.reverse();
 
-	const ramPoints = (statsHistory.data?.points ?? [])
+	const rawRamPoints = (statsHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			ramUsed: p.ramUsedBytes ?? null,
 			ramTotal: p.ramTotalBytes ?? null,
 			ramPercent:
@@ -64,20 +76,26 @@ export function PnodeDetailOverview({
 		}))
 		.reverse();
 
-	const networkPoints = (statsHistory.data?.points ?? [])
+	const rawNetworkPoints = (statsHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			packetsReceived: p.packetsReceived ?? null,
 			packetsSent: p.packetsSent ?? null,
 		}))
 		.reverse();
 
-	const streamsPoints = (statsHistory.data?.points ?? [])
+	const rawStreamsPoints = (statsHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			activeStreams: p.activeStreams ?? null,
 		}))
 		.reverse();
+
+	// Aggregate data points based on time range to avoid cluttering
+	const cpuPoints = aggregateTimeSeriesData(rawCpuPoints, range);
+	const ramPoints = aggregateTimeSeriesData(rawRamPoints, range);
+	const networkPoints = aggregateTimeSeriesData(rawNetworkPoints, range);
+	const streamsPoints = aggregateTimeSeriesData(rawStreamsPoints, range);
 
 	const cpuConfig = {
 		cpu: { label: "CPU %", color: "var(--chart-1)" },
@@ -191,8 +209,8 @@ export function PnodeDetailOverview({
 								</div>
 							) : cpuPoints.length === 0 ? (
 								<div className="text-sm text-muted-foreground">
-									No CPU samples yet. Stats will be recorded when you view this node's
-									live stats.
+									No CPU samples yet. Stats will be recorded when you view this
+									node&apos;s live stats.
 								</div>
 							) : (
 								<ChartContainer
@@ -207,7 +225,36 @@ export function PnodeDetailOverview({
 											</linearGradient>
 										</defs>
 										<CartesianGrid vertical={false} />
-										<XAxis dataKey="ts" hide />
+										<XAxis
+											dataKey="ts"
+											tickLine={false}
+											axisLine={false}
+											tickFormatter={(value) => {
+												if (!value) return "";
+												const date = value instanceof Date ? value : new Date(value);
+												if (isNaN(date.getTime())) return "";
+												if (range === "24h") {
+													return date.toLocaleTimeString("en-US", {
+														hour: "numeric",
+														minute: "2-digit",
+													});
+												} else if (range === "7d") {
+													return date.toLocaleDateString("en-US", {
+														weekday: "short",
+														month: "short",
+														day: "numeric",
+													});
+												} else {
+													return date.toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+													});
+												}
+											}}
+											angle={-45}
+											textAnchor="end"
+											height={60}
+										/>
 										<YAxis tickLine={false} axisLine={false} unit="%" />
 										<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 										<Area
@@ -241,8 +288,8 @@ export function PnodeDetailOverview({
 								</div>
 							) : ramPoints.length === 0 ? (
 								<div className="text-sm text-muted-foreground">
-									No RAM samples yet. Stats will be recorded when you view this node's
-									live stats.
+									No RAM samples yet. Stats will be recorded when you view this
+									node&apos;s live stats.
 								</div>
 							) : (
 								<ChartContainer
@@ -265,7 +312,36 @@ export function PnodeDetailOverview({
 											</linearGradient>
 										</defs>
 										<CartesianGrid vertical={false} />
-										<XAxis dataKey="ts" hide />
+										<XAxis
+											dataKey="ts"
+											tickLine={false}
+											axisLine={false}
+											tickFormatter={(value) => {
+												if (!value) return "";
+												const date = value instanceof Date ? value : new Date(value);
+												if (isNaN(date.getTime())) return "";
+												if (range === "24h") {
+													return date.toLocaleTimeString("en-US", {
+														hour: "numeric",
+														minute: "2-digit",
+													});
+												} else if (range === "7d") {
+													return date.toLocaleDateString("en-US", {
+														weekday: "short",
+														month: "short",
+														day: "numeric",
+													});
+												} else {
+													return date.toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+													});
+												}
+											}}
+											angle={-45}
+											textAnchor="end"
+											height={60}
+										/>
 										<YAxis
 											tickLine={false}
 											axisLine={false}
@@ -310,8 +386,8 @@ export function PnodeDetailOverview({
 								</div>
 							) : networkPoints.length === 0 ? (
 								<div className="text-sm text-muted-foreground">
-									No network data yet. Stats will be recorded when you view this node's
-									live stats.
+									No network data yet. Stats will be recorded when you view this
+									node&apos;s live stats.
 								</div>
 							) : (
 								<ChartContainer
@@ -352,7 +428,36 @@ export function PnodeDetailOverview({
 											</linearGradient>
 										</defs>
 										<CartesianGrid vertical={false} />
-										<XAxis dataKey="ts" hide />
+										<XAxis
+											dataKey="ts"
+											tickLine={false}
+											axisLine={false}
+											tickFormatter={(value) => {
+												if (!value) return "";
+												const date = value instanceof Date ? value : new Date(value);
+												if (isNaN(date.getTime())) return "";
+												if (range === "24h") {
+													return date.toLocaleTimeString("en-US", {
+														hour: "numeric",
+														minute: "2-digit",
+													});
+												} else if (range === "7d") {
+													return date.toLocaleDateString("en-US", {
+														weekday: "short",
+														month: "short",
+														day: "numeric",
+													});
+												} else {
+													return date.toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+													});
+												}
+											}}
+											angle={-45}
+											textAnchor="end"
+											height={60}
+										/>
 										<YAxis tickLine={false} axisLine={false} />
 										<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 										<Area
@@ -395,8 +500,8 @@ export function PnodeDetailOverview({
 								</div>
 							) : streamsPoints.length === 0 ? (
 								<div className="text-sm text-muted-foreground">
-									No streams data yet. Stats will be recorded when you view this node's
-									live stats.
+									No streams data yet. Stats will be recorded when you view this
+									node&apos;s live stats.
 								</div>
 							) : (
 								<ChartContainer
@@ -419,7 +524,36 @@ export function PnodeDetailOverview({
 											</linearGradient>
 										</defs>
 										<CartesianGrid vertical={false} />
-										<XAxis dataKey="ts" hide />
+										<XAxis
+											dataKey="ts"
+											tickLine={false}
+											axisLine={false}
+											tickFormatter={(value) => {
+												if (!value) return "";
+												const date = value instanceof Date ? value : new Date(value);
+												if (isNaN(date.getTime())) return "";
+												if (range === "24h") {
+													return date.toLocaleTimeString("en-US", {
+														hour: "numeric",
+														minute: "2-digit",
+													});
+												} else if (range === "7d") {
+													return date.toLocaleDateString("en-US", {
+														weekday: "short",
+														month: "short",
+														day: "numeric",
+													});
+												} else {
+													return date.toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+													});
+												}
+											}}
+											angle={-45}
+											textAnchor="end"
+											height={60}
+										/>
 										<YAxis tickLine={false} axisLine={false} />
 										<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 										<Area

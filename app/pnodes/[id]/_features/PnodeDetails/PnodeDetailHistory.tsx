@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { useQuery } from "@/lib/query/client";
 import { getPodHistory, getPodStatsHistory } from "@/app/pnodes/_features/api";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, aggregateTimeSeriesData } from "@/lib/utils";
 
 type Range = "24h" | "7d" | "30d";
 
@@ -38,20 +38,34 @@ export function PnodeDetailHistory({ pubkey }: PnodeDetailHistoryProps) {
 		retry: 1,
 	});
 
-	const storagePoints = (podHistory.data?.points ?? [])
+	const normalizeTimestamp = (ts: unknown): string => {
+		if (ts instanceof Date) {
+			return ts.toISOString();
+		} else if (typeof ts === "string") {
+			return ts;
+		} else {
+			return new Date(ts as string | number).toISOString();
+		}
+	};
+
+	const rawStoragePoints = (podHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			used: p.storageUsedBytes ?? 0,
 			committed: p.storageCommittedBytes ?? 0,
 		}))
 		.reverse();
 
-	const cpuPoints = (statsHistory.data?.points ?? [])
+	const rawCpuPoints = (statsHistory.data?.points ?? [])
 		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
+			ts: normalizeTimestamp(p.ts),
 			cpu: p.cpuPercent ?? null,
 		}))
 		.reverse();
+
+	// Aggregate data points based on time range to avoid cluttering
+	const storagePoints = aggregateTimeSeriesData(rawStoragePoints, range);
+	const cpuPoints = aggregateTimeSeriesData(rawCpuPoints, range);
 
 	const storageConfig = {
 		used: { label: "Used", color: "hsl(var(--chart-2))" },
@@ -94,7 +108,36 @@ export function PnodeDetailHistory({ pubkey }: PnodeDetailHistoryProps) {
 							>
 								<LineChart data={storagePoints} accessibilityLayer>
 									<CartesianGrid vertical={false} />
-									<XAxis dataKey="ts" hide />
+									<XAxis
+										dataKey="ts"
+										tickLine={false}
+										axisLine={false}
+										tickFormatter={(value) => {
+											if (!value) return "";
+											const date = value instanceof Date ? value : new Date(value);
+											if (isNaN(date.getTime())) return "";
+											if (range === "24h") {
+												return date.toLocaleTimeString("en-US", {
+													hour: "numeric",
+													minute: "2-digit",
+												});
+											} else if (range === "7d") {
+												return date.toLocaleDateString("en-US", {
+													weekday: "short",
+													month: "short",
+													day: "numeric",
+												});
+											} else {
+												return date.toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+												});
+											}
+										}}
+										angle={-45}
+										textAnchor="end"
+										height={60}
+									/>
 									<YAxis
 										tickLine={false}
 										axisLine={false}
@@ -144,7 +187,36 @@ export function PnodeDetailHistory({ pubkey }: PnodeDetailHistoryProps) {
 							>
 								<LineChart data={cpuPoints} accessibilityLayer>
 									<CartesianGrid vertical={false} />
-									<XAxis dataKey="ts" hide />
+									<XAxis
+										dataKey="ts"
+										tickLine={false}
+										axisLine={false}
+										tickFormatter={(value) => {
+											if (!value) return "";
+											const date = value instanceof Date ? value : new Date(value);
+											if (isNaN(date.getTime())) return "";
+											if (range === "24h") {
+												return date.toLocaleTimeString("en-US", {
+													hour: "numeric",
+													minute: "2-digit",
+												});
+											} else if (range === "7d") {
+												return date.toLocaleDateString("en-US", {
+													weekday: "short",
+													month: "short",
+													day: "numeric",
+												});
+											} else {
+												return date.toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+												});
+											}
+										}}
+										angle={-45}
+										textAnchor="end"
+										height={60}
+									/>
 									<YAxis tickLine={false} axisLine={false} unit="%" />
 									<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 									<Line

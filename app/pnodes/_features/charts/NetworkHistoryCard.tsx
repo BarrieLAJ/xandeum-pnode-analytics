@@ -3,15 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	AreaChart,
-	Area,
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import {
 	ChartContainer,
 	ChartTooltip,
@@ -19,7 +11,7 @@ import {
 } from "@/components/ui/chart";
 import { useQuery } from "@/lib/query/client";
 import { getNetworkHistory } from "@/app/pnodes/_features/api";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes, aggregateTimeSeriesData } from "@/lib/utils";
 
 type Range = "24h" | "7d" | "30d";
 
@@ -34,15 +26,30 @@ export function NetworkHistoryCard() {
 		retry: 1,
 	});
 
-	const points = (query.data?.points ?? [])
-		.map((p) => ({
-			ts: new Date(p.ts).toLocaleString(),
-			committed: p.totalStorageCommittedBytes,
-			used: p.totalStorageUsedBytes,
-			publicPods: p.publicPods,
-			totalPods: p.totalPods,
-		}))
+	const rawPoints = (query.data?.points ?? [])
+		.map((p) => {
+			// Ensure ts is a valid ISO string
+			let ts: string;
+			const tsValue = p.ts as unknown;
+			if (tsValue instanceof Date) {
+				ts = tsValue.toISOString();
+			} else if (typeof tsValue === "string") {
+				ts = tsValue;
+			} else {
+				ts = new Date(tsValue as string | number).toISOString();
+			}
+			return {
+				ts,
+				committed: p.totalStorageCommittedBytes,
+				used: p.totalStorageUsedBytes,
+				publicPods: p.publicPods,
+				totalPods: p.totalPods,
+			};
+		})
 		.reverse();
+
+	// Aggregate data points based on time range to avoid cluttering
+	const points = aggregateTimeSeriesData(rawPoints, range);
 
 	const storageConfig = {
 		committed: { label: "Committed", color: "var(--chart-3)" },
@@ -107,7 +114,36 @@ export function NetworkHistoryCard() {
 										</linearGradient>
 									</defs>
 									<CartesianGrid vertical={false} />
-									<XAxis dataKey="ts" tickLine={false} axisLine={false} hide />
+									<XAxis
+										dataKey="ts"
+										tickLine={false}
+										axisLine={false}
+										tickFormatter={(value) => {
+											if (!value) return "";
+											const date = value instanceof Date ? value : new Date(value);
+											if (isNaN(date.getTime())) return "";
+											if (range === "24h") {
+												return date.toLocaleTimeString("en-US", {
+													hour: "numeric",
+													minute: "2-digit",
+												});
+											} else if (range === "7d") {
+												return date.toLocaleDateString("en-US", {
+													weekday: "short",
+													month: "short",
+													day: "numeric",
+												});
+											} else {
+												return date.toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+												});
+											}
+										}}
+										angle={-45}
+										textAnchor="end"
+										height={60}
+									/>
 									<YAxis
 										tickLine={false}
 										axisLine={false}
@@ -183,7 +219,36 @@ export function NetworkHistoryCard() {
 										</linearGradient>
 									</defs>
 									<CartesianGrid vertical={false} />
-									<XAxis dataKey="ts" tickLine={false} axisLine={false} hide />
+									<XAxis
+										dataKey="ts"
+										tickLine={false}
+										axisLine={false}
+										tickFormatter={(value) => {
+											if (!value) return "";
+											const date = value instanceof Date ? value : new Date(value);
+											if (isNaN(date.getTime())) return "";
+											if (range === "24h") {
+												return date.toLocaleTimeString("en-US", {
+													hour: "numeric",
+													minute: "2-digit",
+												});
+											} else if (range === "7d") {
+												return date.toLocaleDateString("en-US", {
+													weekday: "short",
+													month: "short",
+													day: "numeric",
+												});
+											} else {
+												return date.toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+												});
+											}
+										}}
+										angle={-45}
+										textAnchor="end"
+										height={60}
+									/>
 									<YAxis tickLine={false} axisLine={false} />
 									<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
 									<Area

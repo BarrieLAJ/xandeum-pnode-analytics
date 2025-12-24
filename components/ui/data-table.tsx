@@ -188,11 +188,11 @@ export function DataTable<TData>({
 
 						return (
 							<TableRow key={rowKey} className={rowClassName}>
-								{row
-									.getVisibleCells()
-									.map((cell) =>
-										flexRender(cell.column.columnDef.cell, cell.getContext())
-									)}
+								{row.getVisibleCells().map((cell) => (
+									<React.Fragment key={cell.id}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</React.Fragment>
+								))}
 							</TableRow>
 						);
 					})
