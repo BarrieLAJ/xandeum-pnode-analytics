@@ -78,7 +78,10 @@ export function PnodeTable({
 	);
 
 	// Map TanStack column IDs to our sort field types
-	const sortFieldMap: Record<string, "pubkey" | "version" | "public" | "storageUsed" | "credits"> = useMemo(
+	const sortFieldMap: Record<
+		string,
+		"pubkey" | "version" | "public" | "storageUsed" | "credits"
+	> = useMemo(
 		() => ({
 			pubkey: "pubkey",
 			version: "version",
@@ -151,7 +154,7 @@ export function PnodeTable({
 						getHeaderClassName={(columnId) => {
 							if (columnId === "pubkey") return "w-[280px]";
 							if (columnId === "actions") return "text-right w-[100px]";
-							return undefined;
+							return "";
 						}}
 						manualSorting={true}
 						manualPagination={true}
