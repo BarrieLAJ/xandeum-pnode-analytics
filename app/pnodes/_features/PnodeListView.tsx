@@ -4,7 +4,7 @@ import { PnodeRow } from "@/lib/pnodes/model";
 import { PnodeTable } from "./table";
 import { PnodeCardList } from "./cards/PnodeCardList";
 import { cn } from "@/lib/utils";
-import useMediaViewport from "@/components/ui/hooks/useMediaViewport";
+import useMediaViewport from "@/hooks/useMediaViewport";
 
 interface PnodeListViewProps {
 	rows: PnodeRow[];
