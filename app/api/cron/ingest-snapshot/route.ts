@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { getSnapshot } from "@/lib/pnodes/service";
 import { insertNetworkSnapshot, insertPodSnapshots } from "@/lib/db/queries";
@@ -7,6 +7,8 @@ import { collectStatsFromNodes } from "../../pnodes/_services";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+// Give the cron enough time for DB writes (stats run in `after()`).
+export const maxDuration = 60;
 
 function authorize(request: Request): boolean {
 	const authHeader = request.headers.get("Authorization");
@@ -66,31 +68,25 @@ export async function GET(request: Request) {
 			}))
 		);
 
-		// Collect stats from public nodes (async, don't block on errors)
-		let statsResult = {
-			collected: 0,
-			failed: 0,
-			skipped: 0,
-			errors: [] as string[],
-		};
-		try {
-			statsResult = await collectStatsFromNodes(snapshot.rows, now);
-			console.log(
-				`[Cron] Stats collection: ${statsResult.collected} collected, ${statsResult.failed} failed, ${statsResult.skipped} skipped`
-			);
-		} catch (error) {
-			console.error("[Cron] Error collecting stats:", error);
-			// Don't fail the entire cron job if stats collection fails
-		}
+		// Collect stats in the background so the cron route responds quickly.
+		// This avoids 503s from long-running external RPC calls.
+		after(async () => {
+			try {
+				const statsResult = await collectStatsFromNodes(snapshot.rows, now);
+				console.log(
+					`[Cron] Stats collection: ${statsResult.collected} collected, ${statsResult.failed} failed, ${statsResult.skipped} skipped`
+				);
+			} catch (error) {
+				console.error("[Cron] Error collecting stats:", error);
+			}
+		});
 
 		return NextResponse.json(
 			{
 				insertedAt: now.toISOString(),
 				podsInserted: snapshot.rows.length,
 				networkInserted: 1,
-				statsCollected: statsResult.collected,
-				statsFailed: statsResult.failed,
-				statsSkipped: statsResult.skipped,
+				statsCollection: "scheduled",
 				source: snapshot.source,
 			},
 			{ status: 200 }
