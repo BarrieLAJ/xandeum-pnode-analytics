@@ -8,18 +8,18 @@ import { insertPodStatsSample } from "@/lib/db/queries";
 /**
  * Stats collection timeout - same as normal calls
  */
-const STATS_TIMEOUT_MS = 15000;
+const STATS_TIMEOUT_MS = 7000;
 
 /**
  * Concurrency limit for stats collection to avoid overwhelming nodes
  */
-const STATS_CONCURRENCY = 5;
+const STATS_CONCURRENCY = 20;
 
 /**
  * Maximum number of nodes to collect stats from per cron run
  * Set to null to collect from all nodes with RPC endpoints
  */
-const MAX_NODES_TO_COLLECT = 50; // Collect from top 50 nodes to keep cron job fast
+const MAX_NODES_TO_COLLECT = null; // Collect from all nodes with RPC endpoints
 
 interface StatsCollectionResult {
 	pubkey: string;
