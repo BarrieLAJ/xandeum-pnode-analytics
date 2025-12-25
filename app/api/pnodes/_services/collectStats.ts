@@ -47,7 +47,12 @@ async function collectStatsFromNode(
 	}
 
 	try {
-		const result = await rpcCall<unknown>(prpcUrl, "get-stats", []);
+		const result = await rpcCall<unknown>(
+			prpcUrl,
+			"get-stats",
+			[],
+			STATS_TIMEOUT_MS
+		);
 		const stats = parsePrpcGetStatsResult(result.data);
 
 		// Insert into database
