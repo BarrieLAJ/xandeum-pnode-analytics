@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { CardContent } from "@/components/ui/card";
-import { GeoApiResponse } from "../api-geo";
+import type { GeoApiResponse } from "../api";
 
 interface GeoDistributionContentProps {
 	data: GeoApiResponse;

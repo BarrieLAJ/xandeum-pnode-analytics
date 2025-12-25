@@ -1,15 +1,9 @@
 /**
- * pNodes API client for pnodes directory features
- * Colocated with the features that use it
+ * API response types for pNodes feature
  */
 
-import { apiGet } from "@/lib/api/client";
 import type { SnapshotResponse, PnodeRow } from "@/lib/pnodes/model";
 import type { PrpcGetStatsResult } from "@/lib/pnodes/schemas";
-
-// ============================================================================
-// Types
-// ============================================================================
 
 /**
  * GET /api/pnodes/snapshot response
@@ -118,50 +112,38 @@ export interface PodStatsHistoryApiResponse {
 	}>;
 }
 
-// ============================================================================
-// API methods
-// ============================================================================
-
 /**
- * Fetch snapshot of all pNodes
+ * Geo location data for a single node
  */
-export function getSnapshot(
-	params?: SnapshotParams
-): Promise<SnapshotApiResponse> {
-	return apiGet<SnapshotApiResponse>(
-		"/api/pnodes/snapshot",
-		params as Record<string, string | boolean | undefined>
-	);
-}
-
-/**
- * Probe all pNode RPC endpoints for health/latency
- */
-export function probeNodes(force = false): Promise<ProbeApiResponse> {
-	return apiGet<ProbeApiResponse>("/api/pnodes/probe", { force });
+export interface NodeGeoData {
+	pubkey: string;
+	shortPubkey: string;
+	ip: string | null;
+	geo: {
+		country: string;
+		countryCode: string;
+		city: string;
+		lat: number;
+		lon: number;
+		isp: string;
+	} | null;
 }
 
 /**
- * Fetch live pRPC stats for a single pNode
+ * GET /api/pnodes/geo response
  */
-export function getPnodeStats(pubkey: string): Promise<PnodeStatsApiResponse> {
-	return apiGet<PnodeStatsApiResponse>(`/api/pnodes/${pubkey}/stats`);
-}
-
-export function getNetworkHistory(range: "24h" | "7d" | "30d" = "24h") {
-	return apiGet<NetworkHistoryApiResponse>("/api/history/network", { range });
-}
-
-export function getPodHistory(pubkey: string, range: "24h" | "7d" | "30d" = "24h") {
-	return apiGet<PodHistoryApiResponse>(`/api/history/pod/${pubkey}`, { range });
-}
-
-export function getPodStatsHistory(
-	pubkey: string,
-	range: "24h" | "7d" | "30d" = "24h"
-) {
-	return apiGet<PodStatsHistoryApiResponse>(`/api/history/pod/${pubkey}/stats`, {
-		range,
-	});
+export interface GeoApiResponse {
+	generatedAt: string;
+	lookupDurationMs: number;
+	totalNodes: number;
+	nodesLookedUp: number;
+	distribution: {
+		byCountry: Record<string, number>;
+		byCity: Record<string, number>;
+		byIsp: Record<string, number>;
+		totalWithGeo: number;
+		totalWithoutGeo: number;
+	};
+	nodes: NodeGeoData[];
 }
 

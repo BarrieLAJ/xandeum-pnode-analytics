@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
 import { badRequest, serverError } from "@/lib/api/errors";
-import { getPodHistory, type HistoryRange } from "@/lib/db/queries";
+import {
+	requireDatabase,
+	parseRange,
+	isDbNotSetupError,
+	dbNotSetupResponse,
+} from "@/lib/api/server/route-helpers";
+import { getPodHistory } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-function parseRange(value: string | null): HistoryRange {
-	if (value === "24h" || value === "7d" || value === "30d") return value;
-	return "24h";
-}
 
 interface RouteParams {
 	params: Promise<{ pubkey: string }>;
@@ -20,12 +21,8 @@ interface RouteParams {
  */
 export async function GET(request: Request, { params }: RouteParams) {
 	try {
-		if (!env.DATABASE_URL) {
-			return badRequest(
-				"DATABASE_URL_MISSING",
-				"Historical data is not configured"
-			);
-		}
+		const dbCheck = requireDatabase(env.DATABASE_URL);
+		if (dbCheck) return dbCheck;
 
 		const { pubkey } = await params;
 		if (!pubkey) {
@@ -53,22 +50,9 @@ export async function GET(request: Request, { params }: RouteParams) {
 		);
 	} catch (error) {
 		console.error("Error fetching pod history:", error);
-		const err = error as Error;
 
-		// Check if tables don't exist
-		if (
-			// @ts-expect-error - cause is not typed
-			err.cause?.code === "42P01" ||
-			err.message?.includes("does not exist")
-		) {
-			return NextResponse.json(
-				{
-					error: "DATABASE_NOT_SETUP",
-					message:
-						"Database tables have not been created. Please run: pnpm db:setup",
-				},
-				{ status: 503 }
-			);
+		if (isDbNotSetupError(error)) {
+			return dbNotSetupResponse();
 		}
 
 		return serverError("Failed to fetch pod history", error);

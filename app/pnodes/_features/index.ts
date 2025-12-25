@@ -26,11 +26,11 @@ export { useGeoDistributionData } from "./hooks/useGeoDistribution";
 export type { ProbeStats, ProbeResult } from "./hooks/usePnodeProbe";
 
 // API client
-export { getSnapshot, probeNodes } from "./api";
-export { getGeoData } from "./api-geo";
+export { getSnapshot, probeNodes, getGeoData } from "./api";
 export type {
 	SnapshotApiResponse,
 	ProbeApiResponse,
 	SnapshotParams,
+	GeoApiResponse,
+	NodeGeoData,
 } from "./api";
-export type { GeoApiResponse, NodeGeoData } from "./api-geo";

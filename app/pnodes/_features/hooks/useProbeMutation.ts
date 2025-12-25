@@ -2,11 +2,8 @@
 
 import { useMutation, useQueryClient } from "@/lib/query/client";
 import { updateQueryData, invalidateQuery } from "@/lib/query/cache";
-import {
-	probeNodes,
-	ProbeApiResponse,
-	SnapshotApiResponse,
-} from "../api";
+import { probeNodes } from "../api";
+import type { ProbeApiResponse, SnapshotApiResponse } from "../api";
 import { queryKeys } from "@/lib/query/keys";
 
 /**

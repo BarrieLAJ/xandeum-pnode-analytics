@@ -1,17 +1,8 @@
 import { rpcCall } from "@/lib/prpc/jsonRpcTransport";
 import { TransportError, TransportErrorCode } from "@/lib/prpc/transport";
 import { PnodeRow, PnodeProbeResult } from "@/lib/pnodes/model";
+import { PROBE_CONFIG } from "@/lib/pnodes/constants";
 import pLimit from "p-limit";
-
-/**
- * Probe timeout - shorter than normal calls since we're just checking health
- */
-const PROBE_TIMEOUT_MS = 5000;
-
-/**
- * Concurrency limit for probing to avoid overwhelming the network
- */
-const PROBE_CONCURRENCY = 10;
 
 /**
  * Probe a single node's RPC endpoint
@@ -39,7 +30,7 @@ export async function probeNode(node: PnodeRow): Promise<PnodeProbeResult> {
 			rpcUrl,
 			"getHealth",
 			[],
-			PROBE_TIMEOUT_MS
+			PROBE_CONFIG.TIMEOUT_MS
 		);
 
 		const latencyMs = performance.now() - startTime;
@@ -51,7 +42,7 @@ export async function probeNode(node: PnodeRow): Promise<PnodeProbeResult> {
 				rpcUrl,
 				"getVersion",
 				[],
-				PROBE_TIMEOUT_MS
+				PROBE_CONFIG.TIMEOUT_MS
 			);
 			rpcVersion = versionResult.data["solana-core"];
 		} catch {
@@ -98,7 +89,7 @@ export async function probeNode(node: PnodeRow): Promise<PnodeProbeResult> {
  */
 export async function probeNodes(
 	nodes: PnodeRow[],
-	concurrency = PROBE_CONCURRENCY
+	concurrency = PROBE_CONFIG.CONCURRENCY
 ): Promise<Map<string, PnodeProbeResult>> {
 	const limit = pLimit(concurrency);
 	const results = new Map<string, PnodeProbeResult>();

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Loader2 } from "lucide-react";
-import { NodeGeoData } from "./api-geo";
+import type { NodeGeoData } from "./api";
 import { useWorldMapData } from "./hooks/useWorldMap";
 import { WorldMapHeader, WorldMapContent, WorldMapLegend } from "./map";
 

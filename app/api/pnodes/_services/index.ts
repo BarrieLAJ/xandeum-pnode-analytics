@@ -13,3 +13,5 @@ export {
 export * from "./geo";
 
 export { collectStatsFromNodes } from "./collectStats";
+export { fetchPnodeStats } from "./stats";
+export type { PnodeStatsResult } from "./stats";

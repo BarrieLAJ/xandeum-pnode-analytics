@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@/lib/query/client";
-import { getGeoData, GeoApiResponse } from "../api-geo";
+import { getGeoData } from "../api";
+import type { GeoApiResponse } from "../api";
 import { queryKeys } from "@/lib/query/keys";
 
 /**

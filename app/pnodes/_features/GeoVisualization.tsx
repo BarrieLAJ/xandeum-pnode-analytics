@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Globe, Loader2, MapPin, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { NodeGeoData } from "./api-geo";
+import type { NodeGeoData } from "./api";
 import { useWorldMapData } from "./hooks/useWorldMap";
 import { useGeoDistributionData } from "./hooks/useGeoDistribution";
 import { WorldMapContent, WorldMapLegend } from "./map";

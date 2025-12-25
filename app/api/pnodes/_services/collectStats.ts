@@ -2,24 +2,9 @@ import { rpcCall } from "@/lib/prpc/jsonRpcTransport";
 import { TransportError, TransportErrorCode } from "@/lib/prpc/transport";
 import { PnodeRow } from "@/lib/pnodes/model";
 import { parsePrpcGetStatsResult } from "@/lib/pnodes/schemas";
+import { STATS_CONFIG } from "@/lib/pnodes/constants";
 import pLimit from "p-limit";
 import { insertPodStatsSample } from "@/lib/db/queries";
-
-/**
- * Stats collection timeout - same as normal calls
- */
-const STATS_TIMEOUT_MS = 7000;
-
-/**
- * Concurrency limit for stats collection to avoid overwhelming nodes
- */
-const STATS_CONCURRENCY = 20;
-
-/**
- * Maximum number of nodes to collect stats from per cron run
- * Set to null to collect from all nodes with RPC endpoints
- */
-const MAX_NODES_TO_COLLECT = null; // Collect from all nodes with RPC endpoints
 
 interface StatsCollectionResult {
 	pubkey: string;
@@ -51,7 +36,7 @@ async function collectStatsFromNode(
 			prpcUrl,
 			"get-stats",
 			[],
-			STATS_TIMEOUT_MS
+			STATS_CONFIG.TIMEOUT_MS
 		);
 		const stats = parsePrpcGetStatsResult(result.data);
 
@@ -130,13 +115,13 @@ export async function collectStatsFromNodes(
 	skipped: number;
 	errors: string[];
 }> {
-	const limit = pLimit(STATS_CONCURRENCY);
+	const limit = pLimit(STATS_CONFIG.CONCURRENCY);
 	const errors: string[] = [];
 
 	// Filter to nodes with RPC endpoints (public or private)
 	const nodesToCollect = nodes
 		.filter((n) => n.pod?.prpcUrl)
-		.slice(0, MAX_NODES_TO_COLLECT ?? nodes.length);
+		.slice(0, STATS_CONFIG.MAX_NODES_TO_COLLECT ?? nodes.length);
 
 	const skipped = nodes.length - nodesToCollect.length;
 

@@ -1,27 +1,24 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/config/env";
-import { badRequest, serverError } from "@/lib/api/errors";
-import { getNetworkHistory, type HistoryRange } from "@/lib/db/queries";
+import { serverError } from "@/lib/api/errors";
+import {
+	requireDatabase,
+	parseRange,
+	isDbNotSetupError,
+	dbNotSetupResponse,
+} from "@/lib/api/server/route-helpers";
+import { getNetworkHistory } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-function parseRange(value: string | null): HistoryRange {
-	if (value === "24h" || value === "7d" || value === "30d") return value;
-	return "24h";
-}
 
 /**
  * GET /api/history/network?range=24h|7d|30d
  */
 export async function GET(request: Request) {
 	try {
-		if (!env.DATABASE_URL) {
-			return badRequest(
-				"DATABASE_URL_MISSING",
-				"Historical data is not configured"
-			);
-		}
+		const dbCheck = requireDatabase(env.DATABASE_URL);
+		if (dbCheck) return dbCheck;
 
 		const { searchParams } = new URL(request.url);
 		const range = parseRange(searchParams.get("range"));
@@ -43,22 +40,9 @@ export async function GET(request: Request) {
 		);
 	} catch (error) {
 		console.error("Error fetching network history:", error);
-		const err = error as Error;
 
-		// Check if tables don't exist
-		if (
-			// @ts-expect-error - cause is not typed
-			err.cause?.code === "42P01" ||
-			err.message?.includes("does not exist")
-		) {
-			return NextResponse.json(
-				{
-					error: "DATABASE_NOT_SETUP",
-					message:
-						"Database tables have not been created. Please run: pnpm db:setup",
-				},
-				{ status: 503 }
-			);
+		if (isDbNotSetupError(error)) {
+			return dbNotSetupResponse();
 		}
 
 		return serverError("Failed to fetch network history", error);

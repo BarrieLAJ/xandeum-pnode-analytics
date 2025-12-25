@@ -16,9 +16,7 @@ import {
 	computeStats,
 } from "./model";
 import { fetchPodCredits } from "./credits";
-
-const SNAPSHOT_CACHE_KEY = "pnodes:snapshot";
-const NODE_CACHE_PREFIX = "pnode:";
+import { CACHE_KEYS } from "./constants";
 
 /**
  * Fetch all pNodes using Xandeum pNode pRPC `get-pods-with-stats`.
@@ -118,7 +116,7 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 	const cacheTtlMs = getSnapshotCacheTtlSeconds() * 1000;
 
 	// Check cache first
-	const cached = snapshotCache.get(SNAPSHOT_CACHE_KEY) as
+	const cached = snapshotCache.get(CACHE_KEYS.SNAPSHOT) as
 		| SnapshotResponse
 		| undefined;
 	if (cached) {
@@ -176,12 +174,12 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 		};
 
 		// Cache the response
-		snapshotCache.set(SNAPSHOT_CACHE_KEY, response, cacheTtlMs);
+		snapshotCache.set(CACHE_KEYS.SNAPSHOT, response, cacheTtlMs);
 
 		return response;
 	} catch (error) {
 		// Try to return stale cache on error
-		const staleData = snapshotCache.getStale(SNAPSHOT_CACHE_KEY) as
+		const staleData = snapshotCache.getStale(CACHE_KEYS.SNAPSHOT) as
 			| SnapshotResponse
 			| undefined;
 
@@ -229,7 +227,7 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
  * First tries to find in cached snapshot, then fetches if needed
  */
 export async function getPnodeById(pubkey: string): Promise<PnodeRow | null> {
-	const cacheKey = `${NODE_CACHE_PREFIX}${pubkey}`;
+	const cacheKey = `${CACHE_KEYS.NODE_PREFIX}${pubkey}`;
 
 	// Check node-specific cache
 	const cached = nodeDetailCache.get(cacheKey) as PnodeRow | undefined;

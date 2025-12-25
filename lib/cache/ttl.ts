@@ -108,10 +108,12 @@ class TTLCache<T> {
   }
 }
 
+import { CACHE_TTL } from "@/lib/pnodes/constants";
+
 // Export singleton instances for different cache needs
-export const snapshotCache = new TTLCache<unknown>(30_000); // 30s default
-export const nodeDetailCache = new TTLCache<unknown>(60_000); // 60s default
-export const pnodeStatsCache = new TTLCache<unknown>(15_000); // 15s default (per-node live stats)
+export const snapshotCache = new TTLCache<unknown>(CACHE_TTL.SNAPSHOT_MS);
+export const nodeDetailCache = new TTLCache<unknown>(CACHE_TTL.NODE_DETAIL_MS);
+export const pnodeStatsCache = new TTLCache<unknown>(CACHE_TTL.STATS_MS);
 
 // Export class for custom instances
 export { TTLCache };
