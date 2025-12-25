@@ -103,7 +103,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             <h4 className="font-semibold">How We Discover Nodes</h4>
             <p className="text-sm text-muted-foreground">
-              We query multiple seed pNodes using the <code className="px-1 py-0.5 rounded bg-muted">get-pods-with-stats</code> method to discover all pNodes currently active in the gossip network. This gives us comprehensive data about each node's status, capabilities, and metrics.
+              We query multiple seed pNodes using the <code className="px-1 py-0.5 rounded bg-muted">get-pods-with-stats</code> method to discover all pNodes currently active in the gossip network. This gives us comprehensive data about each node&apos;s status, capabilities, and metrics.
             </p>
           </div>
 
@@ -205,7 +205,7 @@ export default function AboutPage() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            If the pRPC endpoint is unreachable, you'll see cached data with a warning. The dashboard queries multiple seed nodes in parallel for better reliability.
+            If the pRPC endpoint is unreachable, you&apos;ll see cached data with a warning. The dashboard queries multiple seed nodes in parallel for better reliability.
           </p>
         </CardContent>
       </Card>

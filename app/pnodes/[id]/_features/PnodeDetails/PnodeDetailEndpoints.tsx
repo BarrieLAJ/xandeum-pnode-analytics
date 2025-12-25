@@ -26,7 +26,7 @@ export function PnodeDetailEndpoints({ node }: PnodeDetailEndpointsProps) {
           {endpoints.map(({ name, value, icon: Icon, description }) => (
             <div
               key={name}
-              className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+              className="flex flex-col gap-2 py-2 border-b border-border/50 last:border-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-3">
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -38,11 +38,13 @@ export function PnodeDetailEndpoints({ node }: PnodeDetailEndpointsProps) {
                 </div>
               </div>
               {value ? (
-                <div className="flex items-center gap-2">
-                  <code className="text-sm font-mono text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <code className="text-xs sm:text-sm font-mono text-muted-foreground break-all sm:break-normal">
                     {value}
                   </code>
-                  <CopyButton value={value} label={`Copy ${name}`} />
+                  <span className="shrink-0">
+                    <CopyButton value={value} label={`Copy ${name}`} />
+                  </span>
                   {name === "pRPC" && (
                     <a
                       href={`http://${value}`}
