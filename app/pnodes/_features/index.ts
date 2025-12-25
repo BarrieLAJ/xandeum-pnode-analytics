@@ -5,7 +5,7 @@
 
 // Components
 export { PnodeDirectory } from "./PnodeDirectory";
-export { PnodeTable } from "./PnodeTable";
+export { PnodeListView } from "./PnodeListView";
 export { PerformanceCharts } from "./charts/PerformanceCharts";
 export { PnodeDirectoryAlerts } from "./PnodeDirectoryAlerts";
 export { PnodeDirectoryKpis } from "./PnodeDirectoryKpis";

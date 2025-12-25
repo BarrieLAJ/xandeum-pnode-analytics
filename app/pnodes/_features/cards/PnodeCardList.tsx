@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PnodeRow } from "@/lib/pnodes/model";
 import { PnodeCard } from "./PnodeCard";
 import { PnodeCardDetails } from "./PnodeCardDetails";
-import { PnodeTable } from "../PnodeTable";
 import {
 	PnodeTableFilters,
 	PnodeTableToolbar,
@@ -26,12 +25,11 @@ interface PnodeCardListProps {
 	probing?: boolean;
 	onProbe?: () => void;
 	showWatchlistFilter?: boolean;
-	containerHeight?: number | null;
 	className?: string;
 }
 
 /**
- * Responsive component that shows cards on mobile/tablet and table on desktop
+ * Component that shows cards with infinite scroll for mobile/tablet views
  */
 export function PnodeCardList({
 	rows,
@@ -42,7 +40,6 @@ export function PnodeCardList({
 	probing = false,
 	onProbe,
 	showWatchlistFilter = false,
-	containerHeight,
 	className,
 }: PnodeCardListProps) {
 	const [selectedRow, setSelectedRow] = useState<PnodeRow | null>(null);
@@ -61,16 +58,8 @@ export function PnodeCardList({
 		watchlistFilter,
 		setWatchlistFilter,
 		filteredRows,
-		paginatedRows: desktopPaginatedRows,
 		clearFilters,
 		hasActiveFilters,
-		currentPage,
-		totalPages,
-		startIndex,
-		endIndex,
-		goToPage,
-		nextPage,
-		previousPage,
 	} = usePnodeTableFilters({ rows, watchlist });
 
 	const resetVisibleCount = useCallback(() => {
@@ -153,23 +142,7 @@ export function PnodeCardList({
 
 	return (
 		<>
-			{/* Desktop: Show table */}
-			<div className={cn("hidden lg:block", className)}>
-				<PnodeTable
-					rows={rows}
-					modalVersion={modalVersion}
-					versions={versions}
-					watchlist={watchlist}
-					onToggleWatchlist={onToggleWatchlist}
-					showWatchlistFilter={showWatchlistFilter}
-					probing={probing}
-					onProbe={onProbe}
-					containerHeight={containerHeight}
-				/>
-			</div>
-
-			{/* Mobile/Tablet: Show cards */}
-			<div className={cn("lg:hidden space-y-4", className)}>
+			<div className={cn("space-y-4", className)}>
 				{/* Filters */}
 				<div className="shrink-0">
 					<PnodeTableFilters
@@ -224,9 +197,7 @@ export function PnodeCardList({
 									ref={loadMoreRef}
 									className="flex items-center justify-center py-8"
 								>
-									<div className="text-sm text-muted-foreground">
-										Loading more...
-									</div>
+									<div className="text-sm text-muted-foreground">Loading more...</div>
 								</div>
 							)}
 							{!hasMore && visibleRows.length > 0 && (
@@ -249,4 +220,3 @@ export function PnodeCardList({
 		</>
 	);
 }
-

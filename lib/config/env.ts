@@ -51,7 +51,7 @@ const envSchema = z.object({
 
 	// Optional: Timeout for pRPC calls in milliseconds
 	PRPC_TIMEOUT_MS: z.coerce.number().positive().default(15000),
-	
+
 	// Optional: Maximum number of seed pNodes to query (for performance)
 	PRPC_MAX_SEEDS: z.coerce.number().positive().default(4),
 
@@ -90,7 +90,8 @@ function normalizePrpcUrl(seedOrUrl: string): string {
 	try {
 		const url = new URL(withProto);
 		if (!url.port) url.port = String(DEFAULT_PRPC_PORT);
-		if (url.pathname === "/" || url.pathname === "") url.pathname = DEFAULT_PRPC_PATH;
+		if (url.pathname === "/" || url.pathname === "")
+			url.pathname = DEFAULT_PRPC_PATH;
 		return url.toString();
 	} catch {
 		// Fallback: best-effort compose
@@ -102,7 +103,9 @@ function normalizePrpcUrl(seedOrUrl: string): string {
  * Get all configured pRPC seed URLs.
  */
 export function getPrpcSeedUrls(): string[] {
-	const seeds = env.XANDEUM_PRPC_SEEDS.split(",").map((s) => s.trim()).filter(Boolean);
+	const seeds = env.XANDEUM_PRPC_SEEDS.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean);
 	return seeds.map(normalizePrpcUrl);
 }
 

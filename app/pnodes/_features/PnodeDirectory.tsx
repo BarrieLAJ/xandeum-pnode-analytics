@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { SnapshotResponse } from "@/lib/pnodes/model";
 import { cn } from "@/lib/utils";
-import { PnodeCardList } from "./cards";
+import { PnodeListView } from "./PnodeListView";
 import { PerformanceCharts } from "./charts/PerformanceCharts";
 import { NetworkHistoryCard } from "./charts/NetworkHistoryCard";
 import { PnodeDirectoryAlerts } from "./PnodeDirectoryAlerts";
@@ -57,7 +57,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 									</TabsTrigger>
 								</TabsList>
 								<TabsContent value="nodes" className="mt-0">
-									<PnodeCardList
+									<PnodeListView
 										rows={snapshot.rows}
 										modalVersion={snapshot.stats.modalVersion}
 										versions={versions}
@@ -79,10 +79,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 
 						{/* Desktop: Side-by-side layout */}
 						<div
-							className={cn(
-								"hidden xl:grid grid-cols-[2.5fr_1fr] gap-6",
-								className
-							)}
+							className={cn("hidden xl:grid grid-cols-[2.5fr_1fr] gap-6", className)}
 						>
 							{/* Table/Cards - Left side on desktop - Sticky with filters, table, and pagination */}
 							<div
@@ -92,7 +89,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 									maxHeight: height ? `${height}px` : undefined,
 								}}
 							>
-								<PnodeCardList
+								<PnodeListView
 									rows={snapshot.rows}
 									modalVersion={snapshot.stats.modalVersion}
 									versions={versions}

@@ -3,19 +3,15 @@
 import { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { PnodeRow } from "@/lib/pnodes/model";
-import {
-	pnodesToCSV,
-	downloadCSV,
-	generateExportFilename,
-} from "./table/export/csv";
+import { pnodesToCSV, downloadCSV, generateExportFilename } from "./export/csv";
 import { DataTable } from "@/components/ui/data-table";
 import {
 	PnodeTableFilters,
 	PnodeTableToolbar,
 	PnodeTablePagination,
 	usePnodeTableFilters,
-} from "./table";
-import { createPnodeTableColumns } from "./table/PnodeTableColumns";
+} from "./index";
+import { createPnodeTableColumns } from "./PnodeTableColumns";
 
 interface PnodeTableProps {
 	rows: PnodeRow[];
@@ -98,9 +94,9 @@ export function PnodeTable({
 	}, [filteredRows]);
 
 	return (
-		<div className={cn("flex flex-col h-full min-h-0 space-y-4", className)}>
+		<div className={cn("flex flex-col h-full min-h-0", className)}>
 			{/* Filters - Fixed at top, always visible */}
-			<div className="shrink-0">
+			<div className="shrink-0 mb-4">
 				<PnodeTableFilters
 					search={search}
 					onSearchChange={setSearch}
@@ -117,7 +113,7 @@ export function PnodeTable({
 			</div>
 
 			{/* Toolbar - Fixed below filters, always visible */}
-			<div className="shrink-0">
+			<div className="shrink-0 mb-4">
 				<PnodeTableToolbar
 					filteredCount={filteredRows.length}
 					totalCount={rows.length}

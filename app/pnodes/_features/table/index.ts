@@ -2,6 +2,7 @@
  * pNode table components
  */
 
+export { PnodeTable } from "./PnodeTable";
 export { PnodeTableFilters } from "./PnodeTableFilters";
 export { PnodeTableToolbar } from "./PnodeTableToolbar";
 export { PnodeTableHeader } from "./PnodeTableHeader";
@@ -10,4 +11,7 @@ export { PnodeTableProbeCell } from "./PnodeTableProbeCell";
 export { PnodeTableActionsCell } from "./PnodeTableActionsCell";
 export { PnodeTablePagination } from "./PnodeTablePagination";
 export { usePnodeTableFilters } from "../hooks/usePnodeTableFilters";
-export { createPnodeTableColumns, type PnodeTableColumnDef } from "./PnodeTableColumns";
+export {
+	createPnodeTableColumns,
+	type PnodeTableColumnDef,
+} from "./PnodeTableColumns";
