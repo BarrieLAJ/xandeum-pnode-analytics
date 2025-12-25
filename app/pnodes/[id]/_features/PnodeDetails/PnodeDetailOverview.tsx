@@ -181,10 +181,10 @@ export function PnodeDetailOverview({ node }: PnodeDetailOverviewProps) {
 
 			{/* CPU and RAM Usage Graphs */}
 			<div className="space-y-4">
-				<div className="flex items-center justify-between">
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 					<h2 className="text-lg font-semibold">System Resource Usage</h2>
 					<Tabs value={range} onValueChange={(v) => setRange(v as Range)}>
-						<TabsList>
+						<TabsList className="w-full sm:w-fit">
 							<TabsTrigger value="24h">24h</TabsTrigger>
 							<TabsTrigger value="7d">7d</TabsTrigger>
 							<TabsTrigger value="30d">30d</TabsTrigger>

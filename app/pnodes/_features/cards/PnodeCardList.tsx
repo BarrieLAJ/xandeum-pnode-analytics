@@ -73,10 +73,46 @@ export function PnodeCardList({
 		previousPage,
 	} = usePnodeTableFilters({ rows, watchlist });
 
-	// Reset visible count when filters change
-	useEffect(() => {
+	const resetVisibleCount = useCallback(() => {
 		setVisibleCount(25);
-	}, [search, versionFilter, rpcFilter, watchlistFilter]);
+	}, []);
+
+	const handleSearchChange = useCallback(
+		(value: string) => {
+			setSearch(value);
+			resetVisibleCount();
+		},
+		[resetVisibleCount, setSearch]
+	);
+
+	const handleVersionFilterChange = useCallback(
+		(value: string) => {
+			setVersionFilter(value);
+			resetVisibleCount();
+		},
+		[resetVisibleCount, setVersionFilter]
+	);
+
+	const handleRpcFilterChange = useCallback(
+		(value: string) => {
+			setRpcFilter(value);
+			resetVisibleCount();
+		},
+		[resetVisibleCount, setRpcFilter]
+	);
+
+	const handleWatchlistFilterChange = useCallback(
+		(value: string) => {
+			setWatchlistFilter(value);
+			resetVisibleCount();
+		},
+		[resetVisibleCount, setWatchlistFilter]
+	);
+
+	const handleClearFilters = useCallback(() => {
+		clearFilters();
+		resetVisibleCount();
+	}, [clearFilters, resetVisibleCount]);
 
 	// Infinite scroll: Get visible rows for mobile
 	const visibleRows = filteredRows.slice(0, visibleCount);
@@ -138,13 +174,13 @@ export function PnodeCardList({
 				<div className="shrink-0">
 					<PnodeTableFilters
 						search={search}
-						onSearchChange={setSearch}
+						onSearchChange={handleSearchChange}
 						versionFilter={versionFilter}
-						onVersionFilterChange={setVersionFilter}
+						onVersionFilterChange={handleVersionFilterChange}
 						rpcFilter={rpcFilter}
-						onRpcFilterChange={setRpcFilter}
+						onRpcFilterChange={handleRpcFilterChange}
 						watchlistFilter={watchlistFilter}
-						onWatchlistFilterChange={setWatchlistFilter}
+						onWatchlistFilterChange={handleWatchlistFilterChange}
 						versions={versions}
 						watchlistCount={watchlist.length}
 						showWatchlistFilter={showWatchlistFilter}
@@ -157,7 +193,7 @@ export function PnodeCardList({
 						filteredCount={filteredRows.length}
 						totalCount={rows.length}
 						hasActiveFilters={hasActiveFilters}
-						onClearFilters={clearFilters}
+						onClearFilters={handleClearFilters}
 						onProbe={onProbe}
 						probing={probing}
 						onExport={handleExport}

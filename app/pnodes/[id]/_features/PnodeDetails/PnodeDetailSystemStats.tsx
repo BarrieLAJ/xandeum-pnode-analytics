@@ -31,7 +31,7 @@ export function PnodeDetailSystemStats({ pubkey }: PnodeDetailSystemStatsProps) 
 
   return (
     <Card>
-      <CardHeader className="pb-2 flex flex-row items-start justify-between gap-4">
+      <CardHeader className="pb-2 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <Activity className="h-4 w-4" />
@@ -46,7 +46,7 @@ export function PnodeDetailSystemStats({ pubkey }: PnodeDetailSystemStatsProps) 
           size="sm"
           onClick={() => query.refetch()}
           disabled={query.isFetching}
-          className="gap-2"
+          className="gap-2 self-start sm:self-auto"
         >
           {query.isFetching ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

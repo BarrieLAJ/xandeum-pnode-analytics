@@ -35,7 +35,7 @@ export function PnodeDetailHeader({ node, snapshot }: PnodeDetailHeaderProps) {
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-primary/10">
               <Server className="h-6 w-6 text-primary" />
@@ -49,10 +49,14 @@ export function PnodeDetailHeader({ node, snapshot }: PnodeDetailHeaderProps) {
           </div>
 
           {/* Pubkey */}
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 w-fit">
+          <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/50 max-w-full min-w-0">
             <Hash className="h-4 w-4 text-muted-foreground" />
-            <code className="text-sm font-mono">{node.pubkey}</code>
-            <CopyButton value={node.pubkey} label="Copy pubkey" />
+            <code className="text-sm font-mono break-all sm:break-normal">
+              {node.pubkey}
+            </code>
+            <span className="shrink-0">
+              <CopyButton value={node.pubkey} label="Copy pubkey" />
+            </span>
           </div>
         </div>
 
