@@ -19,6 +19,8 @@ interface PnodeTableFiltersProps {
   onRpcFilterChange: (value: string) => void;
   watchlistFilter: string;
   onWatchlistFilterChange: (value: string) => void;
+  stakingTierFilter: string;
+  onStakingTierFilterChange: (value: string) => void;
   versions: string[];
   watchlistCount: number;
   showWatchlistFilter: boolean;
@@ -33,6 +35,8 @@ export function PnodeTableFilters({
   onRpcFilterChange,
   watchlistFilter,
   onWatchlistFilterChange,
+  stakingTierFilter,
+  onStakingTierFilterChange,
   versions,
   watchlistCount,
   showWatchlistFilter,
@@ -83,6 +87,18 @@ export function PnodeTableFilters({
           </SelectContent>
         </Select>
       )}
+      <Select value={stakingTierFilter} onValueChange={onStakingTierFilterChange}>
+        <SelectTrigger className="w-full sm:w-[140px]">
+          <SelectValue placeholder="Staking Tier" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All tiers</SelectItem>
+          <SelectItem value="A">Tier A (80+)</SelectItem>
+          <SelectItem value="B">Tier B (60-79)</SelectItem>
+          <SelectItem value="C">Tier C (40-59)</SelectItem>
+          <SelectItem value="D">Tier D (&lt;40)</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

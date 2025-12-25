@@ -7,6 +7,8 @@ import { VersionBadge } from "@/components/shared/StatusBadge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { WatchlistButton } from "../WatchlistButton";
 import { TableCell } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { cn, formatBytes } from "@/lib/utils";
 import { PnodeTableActionsCell } from "./PnodeTableActionsCell";
 
@@ -136,6 +138,70 @@ export function createPnodeTableColumns(options: {
 						) : (
 							<span className="text-muted-foreground text-sm">—</span>
 						)}
+					</TableCell>
+				);
+			},
+			enableSorting: true,
+		},
+		{
+			id: "staking",
+			accessorFn: (row) => row.derived.stakingScore ?? 0,
+			header: "Staking",
+			cell: ({ row }) => {
+				const score = row.original.derived.stakingScore;
+				const tier = row.original.derived.stakingTier;
+				const reasons = row.original.derived.stakingReasons ?? [];
+
+				if (score === undefined || score === null || tier === null) {
+					return (
+						<TableCell>
+							<span className="text-muted-foreground text-sm">—</span>
+						</TableCell>
+					);
+				}
+
+				const tierColors = {
+					A: "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/50",
+					B: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/50",
+					C: "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/50",
+					D: "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/50",
+				};
+
+				return (
+					<TableCell>
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<div className="flex items-center gap-2">
+										<Badge
+											variant="outline"
+											className={cn(
+												"font-mono text-xs font-semibold",
+												tierColors[tier ?? "D"]
+											)}
+										>
+											{tier} ({score})
+										</Badge>
+									</div>
+								</TooltipTrigger>
+								<TooltipContent className="max-w-xs">
+									<div className="space-y-1">
+										<p className="font-semibold">Staking Score: {score}/100</p>
+										<p className="text-xs text-muted-foreground">Tier: {tier}</p>
+										{reasons.length > 0 && (
+											<div className="mt-2 pt-2 border-t">
+												<p className="text-xs font-medium mb-1">Factors:</p>
+												<ul className="text-xs space-y-0.5">
+													{reasons.map((reason, i) => (
+														<li key={i}>• {reason}</li>
+													))}
+												</ul>
+											</div>
+										)}
+									</div>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</TableCell>
 				);
 			},

@@ -33,6 +33,12 @@ export interface PnodeDerived {
 	ipAddress?: string;
 	/** Count of available endpoints */
 	endpointCount: number;
+	/** Staking score (0-100) - composite score for staking decisions */
+	stakingScore?: number | null;
+	/** Staking tier (A, B, C, D) based on score */
+	stakingTier?: "A" | "B" | "C" | "D" | null;
+	/** Human-readable reasons explaining the staking score */
+	stakingReasons?: string[];
 }
 
 /**

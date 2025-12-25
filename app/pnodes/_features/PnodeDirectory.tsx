@@ -10,10 +10,11 @@ import { PnodeDirectoryAlerts } from "./PnodeDirectoryAlerts";
 import { PnodeDirectoryKpis } from "./PnodeDirectoryKpis";
 import { PnodeDirectoryHeader } from "./PnodeDirectoryHeader";
 import { GeoVisualization } from "./GeoVisualization";
+import { StakingRecommendations } from "./StakingRecommendations";
 import { useWatchlist } from "./hooks/useWatchlist";
 import { AutoSize } from "./AutoSize";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Server, BarChart3 } from "lucide-react";
+import { Server, BarChart3, TrendingUp } from "lucide-react";
 
 interface PnodeDirectoryProps {
 	initialSnapshot: SnapshotResponse;
@@ -51,6 +52,10 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 										<Server className="h-4 w-4" />
 										Nodes
 									</TabsTrigger>
+									<TabsTrigger value="staking" className="flex items-center gap-2">
+										<TrendingUp className="h-4 w-4" />
+										Staking
+									</TabsTrigger>
 									<TabsTrigger value="analytics" className="flex items-center gap-2">
 										<BarChart3 className="h-4 w-4" />
 										Analytics
@@ -65,6 +70,9 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 										onToggleWatchlist={toggleWatchlist}
 										showWatchlistFilter={true}
 									/>
+								</TabsContent>
+								<TabsContent value="staking" className="mt-0">
+									<StakingRecommendations rows={snapshot.rows} topN={10} />
 								</TabsContent>
 								<TabsContent value="analytics" className="mt-0 space-y-6">
 									<PerformanceCharts
@@ -102,6 +110,7 @@ export function PnodeDirectory({ initialSnapshot }: PnodeDirectoryProps) {
 
 							{/* Charts - Right side on desktop - Scrolls naturally with page */}
 							<div className="space-y-6 min-w-0">
+								<StakingRecommendations rows={snapshot.rows} topN={5} />
 								<PerformanceCharts
 									rows={snapshot.rows}
 									modalVersion={snapshot.stats.modalVersion}

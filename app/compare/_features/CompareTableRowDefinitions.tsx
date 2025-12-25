@@ -2,9 +2,11 @@
 
 import { PnodeRow, SnapshotResponse } from "@/lib/pnodes/model";
 import { VersionBadge } from "@/components/shared/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle } from "lucide-react";
 import { CompareTableRow } from "./CompareTableRow";
 import { formatBytes, formatDurationSeconds, formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface CompareTableRowDefinitionsProps {
   selectedNodes: PnodeRow[];
@@ -185,6 +187,44 @@ export function CompareTableRowDefinitions({
             <span className="text-muted-foreground">—</span>
           )
         }
+      />
+      <CompareTableRow
+        label="Staking Score"
+        selectedNodes={selectedNodes}
+        snapshot={snapshot}
+        renderCell={(node) => {
+          const score = node.derived.stakingScore;
+          const tier = node.derived.stakingTier;
+          if (score === undefined || score === null || tier === null || tier === undefined) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+          const tierColors: Record<"A" | "B" | "C" | "D", string> = {
+            A: "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/50",
+            B: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/50",
+            C: "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/50",
+            D: "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/50",
+          };
+          return (
+            <Badge
+              variant="outline"
+              className={cn("font-mono text-xs font-semibold", tierColors[tier])}
+            >
+              {tier} ({score})
+            </Badge>
+          );
+        }}
+      />
+      <CompareTableRow
+        label="Staking Tier"
+        selectedNodes={selectedNodes}
+        snapshot={snapshot}
+        renderCell={(node) => {
+          const tier = node.derived.stakingTier;
+          if (tier === null || tier === undefined) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+          return <span className="font-mono font-semibold">{tier}</span>;
+        }}
       />
       <CompareTableRow
         label="pRPC Port"

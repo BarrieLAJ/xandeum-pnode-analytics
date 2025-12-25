@@ -17,6 +17,7 @@ import {
 } from "./model";
 import { fetchPodCredits } from "./credits";
 import { CACHE_KEYS } from "./constants";
+import { applyStakingScores } from "./scoring";
 
 /**
  * Fetch all pNodes using Xandeum pNode pRPC `get-pods-with-stats`.
@@ -146,7 +147,7 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 		});
 
 		// Transform to canonical rows and merge credits
-		const rows: PnodeRow[] = pods.map((pod) => {
+		let rows: PnodeRow[] = pods.map((pod) => {
 			const row = podWithStatsToPnodeRow(pod);
 			// Merge credits if available
 			if (row.pod) {
@@ -155,6 +156,9 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 			}
 			return row;
 		});
+
+		// Apply staking scores
+		rows = applyStakingScores(rows);
 
 		// Compute stats
 		const stats: SnapshotStats = computeStats(rows);
@@ -259,6 +263,8 @@ export function filterPnodes(
 		version?: string;
 		hasRpc?: boolean;
 		hasPubsub?: boolean;
+		minScore?: number;
+		tier?: "A" | "B" | "C" | "D";
 	}
 ): PnodeRow[] {
 	let filtered = rows;
@@ -284,6 +290,18 @@ export function filterPnodes(
 	if (options.hasPubsub !== undefined) {
 		filtered = filtered.filter(
 			(row) => row.derived.hasPubsub === options.hasPubsub
+		);
+	}
+
+	if (options.minScore !== undefined) {
+		filtered = filtered.filter(
+			(row) => (row.derived.stakingScore ?? 0) >= options.minScore!
+		);
+	}
+
+	if (options.tier !== undefined) {
+		filtered = filtered.filter(
+			(row) => row.derived.stakingTier === options.tier
 		);
 	}
 
@@ -315,6 +333,11 @@ export function sortPnodes(
 				return (
 					multiplier *
 					(a.derived.ipAddress ?? "").localeCompare(b.derived.ipAddress ?? "")
+				);
+			case "stakingScore":
+				return (
+					multiplier *
+					((a.derived.stakingScore ?? 0) - (b.derived.stakingScore ?? 0))
 				);
 			default:
 				return 0;

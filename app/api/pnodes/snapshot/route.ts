@@ -30,14 +30,17 @@ export async function GET(request: Request) {
     const hasRpcParam = searchParams.get("hasRpc");
     const hasRpc =
       hasRpcParam === "true" ? true : hasRpcParam === "false" ? false : undefined;
+    const minScoreParam = searchParams.get("minScore");
+    const minScore = minScoreParam ? parseInt(minScoreParam, 10) : undefined;
+    const tier = searchParams.get("tier") as "A" | "B" | "C" | "D" | undefined;
     const sortBy = searchParams.get("sortBy") ?? "pubkey";
     const sortOrder =
       (searchParams.get("sortOrder") as "asc" | "desc") ?? "asc";
 
     // Apply filters
     let rows = snapshot.rows;
-    if (search || version || hasRpc !== undefined) {
-      rows = filterPnodes(rows, { search, version, hasRpc });
+    if (search || version || hasRpc !== undefined || minScore !== undefined || tier) {
+      rows = filterPnodes(rows, { search, version, hasRpc, minScore, tier });
     }
 
     // Apply sorting
@@ -53,6 +56,8 @@ export async function GET(request: Request) {
           search,
           version,
           hasRpc,
+          minScore,
+          tier,
           sortBy,
           sortOrder,
           totalFiltered: rows.length,

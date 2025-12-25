@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { PnodeRow } from "@/lib/pnodes/model";
 
-type SortField = "pubkey" | "version" | "public" | "storageUsed" | "credits";
+type SortField = "pubkey" | "version" | "public" | "storageUsed" | "credits" | "stakingScore";
 type SortOrder = "asc" | "desc";
 
 interface UsePnodeTableFiltersProps {
@@ -21,6 +21,7 @@ export function usePnodeTableFilters({
 	const [versionFilter, setVersionFilter] = useState<string>("all");
 	const [rpcFilter, setRpcFilter] = useState<string>("all"); // kept name for compatibility: maps to Public/Private
 	const [watchlistFilter, setWatchlistFilter] = useState<string>("all");
+	const [stakingTierFilter, setStakingTierFilter] = useState<string>("all");
 	const [sortField, setSortField] = useState<SortField>("pubkey");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 	const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +60,13 @@ export function usePnodeTableFilters({
 			result = result.filter((row) => !watchlist.includes(row.pubkey));
 		}
 
+		// Staking tier filter
+		if (stakingTierFilter !== "all") {
+			result = result.filter(
+				(row) => row.derived.stakingTier === stakingTierFilter
+			);
+		}
+
 		// Sort
 		result.sort((a, b) => {
 			let comparison = 0;
@@ -85,6 +93,11 @@ export function usePnodeTableFilters({
 					else if (bCredits === null) comparison = -1; // nulls last
 					else comparison = aCredits - bCredits;
 					break;
+				case "stakingScore":
+					const aScore = a.derived.stakingScore ?? 0;
+					const bScore = b.derived.stakingScore ?? 0;
+					comparison = aScore - bScore;
+					break;
 			}
 			return sortOrder === "asc" ? comparison : -comparison;
 		});
@@ -96,6 +109,7 @@ export function usePnodeTableFilters({
 		versionFilter,
 		rpcFilter,
 		watchlistFilter,
+		stakingTierFilter,
 		watchlist,
 		sortField,
 		sortOrder,
@@ -105,7 +119,7 @@ export function usePnodeTableFilters({
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setCurrentPage(1);
-	}, [search, versionFilter, rpcFilter, watchlistFilter, sortField, sortOrder]);
+	}, [search, versionFilter, rpcFilter, watchlistFilter, stakingTierFilter, sortField, sortOrder]);
 
 	// Calculate pagination
 	const totalPages = Math.ceil(filteredRows.length / pageSize);
@@ -127,13 +141,15 @@ export function usePnodeTableFilters({
 		setVersionFilter("all");
 		setRpcFilter("all");
 		setWatchlistFilter("all");
+		setStakingTierFilter("all");
 	};
 
 	const hasActiveFilters =
 		search !== "" ||
 		versionFilter !== "all" ||
 		rpcFilter !== "all" ||
-		watchlistFilter !== "all";
+		watchlistFilter !== "all" ||
+		stakingTierFilter !== "all";
 
 	const goToPage = (page: number) => {
 		if (page >= 1 && page <= totalPages) {
@@ -162,6 +178,8 @@ export function usePnodeTableFilters({
 		setRpcFilter,
 		watchlistFilter,
 		setWatchlistFilter,
+		stakingTierFilter,
+		setStakingTierFilter,
 		sortField,
 		sortOrder,
 		toggleSort,

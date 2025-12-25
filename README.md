@@ -60,10 +60,13 @@ Create a `.env.local` file in the root directory:
 ```bash
 # Optional: Explicit pRPC URL override
 # If set, this will be used instead of XANDEUM_PRPC_SEEDS
-XANDEUM_PRPC_URL=https://api.devnet.xandeum.com:8899/
+# Format: http://<host>:<port>/<path> (e.g., http://api.devnet.xandeum.com:8899/rpc)
+XANDEUM_PRPC_URL=http://api.devnet.xandeum.com:8899/rpc
 
 # Optional: Comma-separated list of seed pNode hosts/URLs
 # Defaults to a list of known seed nodes if not provided
+# Format: IP addresses or full URLs (e.g., 173.212.203.145 or http://173.212.203.145:6000/rpc)
+# Default port is 6000, default path is /rpc
 XANDEUM_PRPC_SEEDS=173.212.203.145,192.190.136.36
 
 # Optional: Enable per-node RPC probing for health/latency checks
@@ -115,30 +118,65 @@ pnpm db:setup
 
 ## Data Source
 
-Data is fetched from Xandeum pRPC endpoints using the `get-pods-with-stats` method. The dashboard queries multiple seed nodes to discover all pNodes in the gossip network, including their identifiers, versions, endpoints, storage stats, system metrics, and credits.
+Data is fetched from Xandeum pRPC endpoints using the `get-pods-with-stats` method. The dashboard queries multiple seed pNodes directly (by default, individual seed nodes on port 6000) in parallel to discover all pNodes in the gossip network. Results are merged and deduplicated to provide comprehensive coverage. The data includes node identifiers, versions, endpoints, storage stats, system metrics, and credits.
 
 ## Project Structure
 
 ```
 ├── app/
 │   ├── api/
-│   │   ├── pnodes/          # pNode API endpoints
+│   │   ├── pnodes/           # pNode API endpoints
+│   │   │   ├── _services/    # Service layer (geo lookup, stats, probe)
+│   │   │   ├── [id]/         # Individual node endpoints
+│   │   │   ├── credits/      # Credits API
+│   │   │   ├── geo/          # Geolocation data
+│   │   │   ├── probe/        # RPC health probing
+│   │   │   └── snapshot/     # Full network snapshot
 │   │   ├── history/          # Historical data endpoints
+│   │   │   ├── network/      # Network-wide history
+│   │   │   └── pod/          # Individual pod history
 │   │   └── cron/             # Cron ingestion endpoints
+│   │       └── _services/    # Auth and ingestion services
 │   ├── pnodes/               # pNode directory and detail pages
+│   │   ├── _features/        # Feature modules (cards, charts, table, etc.)
+│   │   │   ├── api/          # Client-side API clients
+│   │   │   ├── cards/        # Card-based UI components
+│   │   │   ├── charts/       # Chart components
+│   │   │   ├── geo/          # Geographic distribution components
+│   │   │   ├── hooks/        # Custom React hooks
+│   │   │   ├── map/          # World map visualization
+│   │   │   └── table/        # Table components
+│   │   └── [id]/             # Individual node detail page
+│   │       └── _features/    # Detail page features
 │   ├── compare/              # Node comparison page
+│   │   └── _features/        # Comparison feature components
 │   └── about/                # About page
 ├── components/
 │   ├── shared/               # Shared components (AppShell, MetricCard, etc.)
 │   └── ui/                   # shadcn/ui primitives
+│       └── hooks/            # UI-related hooks
 ├── lib/
+│   ├── api/                  # API client utilities
+│   │   └── server/           # Server-side route helpers
+│   ├── cache/                # Caching utilities (TTL cache)
 │   ├── config/               # Environment configuration
-│   ├── prpc/                 # pRPC transport layer
+│   ├── db/                   # Database layer
+│   │   ├── queries/          # Database query functions
+│   │   ├── client.ts         # Database client
+│   │   └── schema.ts         # Drizzle schema definitions
 │   ├── pnodes/               # pNode domain logic
-│   ├── db/                   # Database queries and schema
-│   ├── cache/                # Caching utilities
-│   └── query/                # React Query setup
-└── scripts/                  # Utility scripts
+│   │   ├── types/            # TypeScript type definitions
+│   │   ├── service.ts        # Core pNode service
+│   │   ├── credits.ts        # Credits fetching
+│   │   ├── scoring.ts        # Staking score calculation
+│   │   └── model.ts          # Data models and transformations
+│   ├── prpc/                 # pRPC transport layer
+│   ├── query/                # React Query setup and configuration
+│   ├── storage/              # Storage abstractions (KV, localStorage)
+│   └── watchlist/            # Watchlist storage logic
+├── drizzle/                  # Database migrations
+├── scripts/                  # Utility scripts (migrations, etc.)
+└── public/                   # Static assets
 ```
 
 ## Deployment

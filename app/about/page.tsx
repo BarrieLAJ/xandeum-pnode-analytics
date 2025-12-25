@@ -89,13 +89,16 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <h4 className="font-semibold">pRPC Endpoint</h4>
+            <h4 className="font-semibold">pRPC Endpoints</h4>
             <p className="text-sm text-muted-foreground">
-              All data comes from the Xandeum devnet pRPC endpoint using standard JSON-RPC 2.0 (compatible with Solana tooling).
+              We query multiple seed pNodes directly using standard JSON-RPC 2.0 (compatible with Solana tooling). By default, we connect to individual seed nodes on port 6000, but this can be configured via environment variables.
             </p>
             <div className="p-3 rounded-lg bg-muted/50 font-mono text-sm">
-              <code>https://api.devnet.xandeum.com:8899/</code>
+              <code>http://&lt;seed-ip&gt;:6000/rpc</code>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              The dashboard queries multiple seed nodes in parallel and merges results for comprehensive coverage of the gossip network.
+            </p>
           </div>
 
           <Separator />
@@ -250,10 +253,29 @@ export default function AboutPage() {
                 Shows which software versions are running across all pNodes. The modal version is the most common one.
               </p>
             </div>
-            <div>
+            <div className="border-b border-border pb-4">
               <p className="font-medium">System Metrics</p>
               <p className="text-sm text-muted-foreground">
                 Individual node metrics including CPU usage, RAM consumption, network traffic, and active stream counts.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium">Staking Score</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                A composite score (0-100) that evaluates nodes for staking decisions based on multiple factors:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                <li><strong>Reliability (30 points):</strong> Public reachability of the RPC endpoint</li>
+                <li><strong>Performance (25 points):</strong> RPC health and latency (when probe data is available)</li>
+                <li><strong>Uptime (20 points):</strong> Reported uptime in seconds</li>
+                <li><strong>Credits (15 points):</strong> Available credits from the Xandeum Credits API</li>
+                <li><strong>Capacity (10 points):</strong> Storage capacity committed</li>
+              </ul>
+              <p className="text-sm text-muted-foreground mt-3">
+                Scores are normalized using percentiles across all nodes. Tiers: A (80+), B (60-79), C (40-59), D (&lt;40).
+              </p>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                <strong>Important:</strong> This scoring is a heuristic based on available metrics and is NOT official staking advice. Always do your own research before staking XAND.
               </p>
             </div>
           </div>

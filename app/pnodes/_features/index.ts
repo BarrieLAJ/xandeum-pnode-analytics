@@ -11,6 +11,7 @@ export { PnodeDirectoryAlerts } from "./PnodeDirectoryAlerts";
 export { PnodeDirectoryKpis } from "./PnodeDirectoryKpis";
 export { PnodeDirectoryHeader } from "./PnodeDirectoryHeader";
 export { WatchlistButton } from "./WatchlistButton";
+export { StakingRecommendations } from "./StakingRecommendations";
 
 // Geographical components
 export { WorldMap } from "./WorldMap";

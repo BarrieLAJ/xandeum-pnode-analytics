@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSnapshot } from "@/lib/pnodes/service";
+import { applyStakingScores } from "@/lib/pnodes/scoring";
 import {
 	probeNodes,
 	enrichWithProbes,
@@ -49,7 +50,10 @@ export async function GET(request: Request) {
     const probeResults = await probeNodes(snapshot.rows);
 
     // Enrich rows with probe data
-    const enrichedRows = enrichWithProbes(snapshot.rows, probeResults);
+    let enrichedRows = enrichWithProbes(snapshot.rows, probeResults);
+
+    // Re-apply staking scores now that we have probe data (latency affects score)
+    enrichedRows = applyStakingScores(enrichedRows);
 
     // Calculate statistics
     const probeStats = calculateProbeStats(probeResults);

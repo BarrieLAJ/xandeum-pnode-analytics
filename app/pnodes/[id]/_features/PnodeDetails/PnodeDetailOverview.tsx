@@ -12,7 +12,10 @@ import {
 	MemoryStick,
 	Network,
 	Radio,
+	TrendingUp,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { PnodeDetailSystemStats } from "./PnodeDetailSystemStats";
 import {
 	formatBytes,
@@ -115,8 +118,68 @@ export function PnodeDetailOverview({ node }: PnodeDetailOverviewProps) {
 		activeStreams: { label: "Active Streams", color: "var(--chart-3)" },
 	} as const;
 
+	const score = node.derived.stakingScore;
+	const tier = node.derived.stakingTier;
+	const reasons = node.derived.stakingReasons ?? [];
+
+	const tierColors = {
+		A: "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/50",
+		B: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/50",
+		C: "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/50",
+		D: "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/50",
+	};
+
 	return (
 		<div className="space-y-6">
+			{/* Staking Readiness Card */}
+			{score !== undefined && score !== null && tier && (
+				<Card>
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2">
+							<TrendingUp className="h-5 w-5 text-primary" />
+							Staking Readiness
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="flex items-center gap-4">
+							<div>
+								<p className="text-sm text-muted-foreground mb-1">Staking Score</p>
+								<div className="flex items-center gap-3">
+									<Badge
+										variant="outline"
+										className={cn(
+											"font-mono text-lg font-semibold px-3 py-1",
+											tierColors[tier]
+										)}
+									>
+										{tier} ({score}/100)
+									</Badge>
+								</div>
+							</div>
+						</div>
+						{reasons.length > 0 && (
+							<div>
+								<p className="text-sm font-medium mb-2">Score Factors:</p>
+								<div className="flex flex-wrap gap-2">
+									{reasons.map((reason, i) => (
+										<Badge key={i} variant="secondary" className="text-xs">
+											{reason}
+										</Badge>
+									))}
+								</div>
+							</div>
+						)}
+						<div className="pt-2 border-t">
+							<p className="text-xs text-muted-foreground">
+								<strong>Note:</strong> This score is a heuristic based on available
+								metrics (reliability, performance, uptime, credits, capacity) and is
+								not official staking advice. Always do your own research.
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+			)}
+
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				<Card>
 					<CardHeader className="pb-2">

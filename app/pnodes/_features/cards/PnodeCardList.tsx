@@ -57,6 +57,8 @@ export function PnodeCardList({
 		setRpcFilter,
 		watchlistFilter,
 		setWatchlistFilter,
+		stakingTierFilter,
+		setStakingTierFilter,
 		filteredRows,
 		clearFilters,
 		hasActiveFilters,
@@ -96,6 +98,14 @@ export function PnodeCardList({
 			resetVisibleCount();
 		},
 		[resetVisibleCount, setWatchlistFilter]
+	);
+
+	const handleStakingTierFilterChange = useCallback(
+		(value: string) => {
+			setStakingTierFilter(value);
+			resetVisibleCount();
+		},
+		[resetVisibleCount, setStakingTierFilter]
 	);
 
 	const handleClearFilters = useCallback(() => {
@@ -154,6 +164,8 @@ export function PnodeCardList({
 						onRpcFilterChange={handleRpcFilterChange}
 						watchlistFilter={watchlistFilter}
 						onWatchlistFilterChange={handleWatchlistFilterChange}
+						stakingTierFilter={stakingTierFilter}
+						onStakingTierFilterChange={handleStakingTierFilterChange}
 						versions={versions}
 						watchlistCount={watchlist.length}
 						showWatchlistFilter={showWatchlistFilter}

@@ -46,6 +46,8 @@ export function PnodeTable({
 		setRpcFilter,
 		watchlistFilter,
 		setWatchlistFilter,
+		stakingTierFilter,
+		setStakingTierFilter,
 		sortField,
 		toggleSort,
 		filteredRows,
@@ -75,7 +77,7 @@ export function PnodeTable({
 	// Map TanStack column IDs to our sort field types
 	const sortFieldMap: Record<
 		string,
-		"pubkey" | "version" | "public" | "storageUsed" | "credits"
+		"pubkey" | "version" | "public" | "storageUsed" | "credits" | "stakingScore"
 	> = useMemo(
 		() => ({
 			pubkey: "pubkey",
@@ -83,6 +85,7 @@ export function PnodeTable({
 			status: "public",
 			storage: "storageUsed",
 			credits: "credits",
+			staking: "stakingScore",
 		}),
 		[]
 	);
@@ -106,6 +109,8 @@ export function PnodeTable({
 					onRpcFilterChange={setRpcFilter}
 					watchlistFilter={watchlistFilter}
 					onWatchlistFilterChange={setWatchlistFilter}
+					stakingTierFilter={stakingTierFilter}
+					onStakingTierFilterChange={setStakingTierFilter}
 					versions={versions}
 					watchlistCount={watchlist.length}
 					showWatchlistFilter={showWatchlistFilter}
