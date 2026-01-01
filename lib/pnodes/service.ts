@@ -27,14 +27,17 @@ async function fetchPodsWithStats(): Promise<{
 	durationMs: number;
 	errors: string[];
 }> {
+	const explicitUrl = getPrpcUrl();
 	const allSeedUrls = getPrpcSeedUrls();
-	const fallbackUrl = getPrpcUrl();
 	const maxSeeds = getMaxSeeds();
 
 	// Limit the number of seeds we query for performance
 	// Take first N seeds to prioritize known-good ones
-	const seedUrls = allSeedUrls.slice(0, maxSeeds);
-	const urlsToQuery = seedUrls.length > 0 ? seedUrls : [fallbackUrl];
+	const urlsToQuery = explicitUrl
+		? [explicitUrl]
+		: allSeedUrls.slice(0, maxSeeds).length > 0
+		? allSeedUrls.slice(0, maxSeeds)
+		: [explicitUrl];
 
 	// Use race strategy: query all seeds in parallel, use first successful response
 	// This is faster than waiting for all to complete
@@ -91,17 +94,17 @@ async function fetchPodsWithStats(): Promise<{
 	}
 
 	// Merge + dedupe by pubkey
-	const byPubkey = new Map<string, PodWithStats>();
-	for (const { pods } of successful) {
-		for (const pod of pods) {
-			if (!byPubkey.has(pod.pubkey)) byPubkey.set(pod.pubkey, pod);
-		}
-	}
+	// const byPubkey = new Map<string, PodWithStats>();
+	// for (const { pods } of successful) {
+	// 	for (const pod of pods) {
+	// 		if (!byPubkey.has(pod.pubkey)) byPubkey.set(pod.pubkey, pod);
+	// 	}
+	// }
 
 	const totalDurationMs = performance.now() - startTime;
 
 	return {
-		pods: Array.from(byPubkey.values()),
+		pods: successful.flatMap((r) => r.pods),
 		// Use actual total duration (race strategy means we wait for all to settle)
 		durationMs: Math.round(totalDurationMs),
 		errors,
@@ -121,6 +124,7 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 		| SnapshotResponse
 		| undefined;
 	if (cached) {
+		console.warn("cached", cached);
 		return cached;
 	}
 
@@ -136,13 +140,14 @@ export async function getSnapshot(): Promise<SnapshotResponse> {
 			if (podsResult.status === "rejected") {
 				throw podsResult.reason;
 			}
-			
+
 			// Handle credits result (optional - use empty map if failed)
 			const creditsResult = results[1];
-			const creditsMap = creditsResult.status === "fulfilled" 
-				? creditsResult.value 
-				: new Map<string, number>();
-			
+			const creditsMap =
+				creditsResult.status === "fulfilled"
+					? creditsResult.value
+					: new Map<string, number>();
+
 			return [podsResult.value, creditsMap] as const;
 		});
 
@@ -300,9 +305,7 @@ export function filterPnodes(
 	}
 
 	if (options.tier !== undefined) {
-		filtered = filtered.filter(
-			(row) => row.derived.stakingTier === options.tier
-		);
+		filtered = filtered.filter((row) => row.derived.stakingTier === options.tier);
 	}
 
 	return filtered;
